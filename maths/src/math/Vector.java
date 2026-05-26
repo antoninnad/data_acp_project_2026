@@ -132,7 +132,7 @@ public class Vector {
     	for (int i = 0 ; i < this.data.length ; i++) {
 			display += data[i];
 			
-			// Add a comma between the numbers execpt the last one
+			// Add a comma between the numbers except the last one
 			if (i < this.data.length - 1) {
 				display += ", ";
 			}
