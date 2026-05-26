@@ -8,6 +8,7 @@ public class Vector {
 	
 	// Declaration of a one-dimensional array representing a vector
     private double[] data;
+    double dimension;
 
     /**
      * Constructs a new vector with a given dimension
@@ -15,6 +16,7 @@ public class Vector {
      */
     public Vector(int dimension) {
         this.data = new double[dimension];
+        this.dimension = dimension;
     }
 
     /**
@@ -33,6 +35,10 @@ public class Vector {
      */
     public double get(int i) {
         return data[i];
+    }
+
+    public double getDimension() {
+        return dimension;
     }
 
     /**
