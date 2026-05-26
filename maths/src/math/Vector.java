@@ -43,7 +43,8 @@ public class Vector {
     public void set(int i, double value) {
         data[i] = value;
     }
-
+    
+    
 	/**
 	 * Calculates the euclidean norm of the vector
 	 * @return the norm 
@@ -58,6 +59,7 @@ public class Vector {
 		return Math.sqrt(sum);
 	}
 	
+	
 	/**
 	 * Normalizes each value of the vector using the norm
 	 */
@@ -71,5 +73,73 @@ public class Vector {
 			}
 		}
 	}
+	
+	/**
+	 * Calculates the difference between two vector 
+	 * @param v the other vector
+	 * @return a new vector who is the difference between the vectors
+	 */
+	public Vector difference(Vector v) {
+		
+		if (this.data.length != v.data.length) {
+			//throw();
+		}
+		
+		Vector diffVector = new Vector(this.data.length);
+		for (int i = 0 ; i < this.data.length ; i++) {
+			diffVector.set(i, this.get(i) - v.get(i));
+		}
+		
+		return diffVector;
+	}
+	
+	/**
+	 * Calculates the euclidean distance between two vectors
+	 * @param v the other vector
+	 * @return the distance 
+	 */
+	public double distance(Vector v) {
+        // the norm of the difference 
+        return this.difference(v).norm();
+    }
+	
+	/**
+	 * Calculates the dot product between the current vector and an other
+	 * @param v the other vector
+	 * @return the scalar result
+	 */
+	public double dotProduct(Vector v) {
+		
+		if (this.data.length != v.data.length) {
+			//throw();
+		}
+		
+		double result = 0 ;
+		for (int i = 0 ; i < this.data.length ; i++) {
+			result = result + this.data[i] * v.get(i);
+		}
+		return result;
+	}
+	
+	/**
+	 * Returns a vector
+	 * @return a display of a vector
+	 */
+	@Override
+    public String toString() {
+		String display = "[";
+    	
+    	for (int i = 0 ; i < this.data.length ; i++) {
+			display += data[i];
+			
+			// Add a comma between the numbers execpt the last one
+			if (i < this.data.length - 1) {
+				display += ", ";
+			}
+		}
+		
+		display += "]";
+		return display;
+    }
 	
 }
