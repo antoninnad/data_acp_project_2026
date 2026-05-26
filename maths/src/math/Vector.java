@@ -8,7 +8,8 @@ public class Vector {
 	
 	// Declaration of a one-dimensional array representing a vector
     private double[] data;
-    double dimension;
+    // Declaration of the size of the vector for security
+    private int dimension;
 
     /**
      * Constructs a new vector with a given dimension
@@ -26,6 +27,7 @@ public class Vector {
     public Vector(double[] data) {
     	// Make a deep copy instead of a shallow one to avoid memory issues 
     	this.data = data.clone();
+    	this.dimension = data.length;
     }
 
     /**
@@ -37,8 +39,12 @@ public class Vector {
         return data[i];
     }
 
-    public double getDimension() {
-        return dimension;
+    /**
+     * Gets the size of the vector 
+     * @return an integer
+     */
+    public int getDimension() {
+    	return this.dimension;
     }
 
     /**
