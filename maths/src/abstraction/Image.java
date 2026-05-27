@@ -1,17 +1,18 @@
 package abstraction;
 
-import app.Main;
-import math.Matrix;
-
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import math.Vector;
 
 import javax.imageio.ImageIO;
+
+import math.Matrix;
+import math.Vector;
 
 public class Image {
 
@@ -19,6 +20,7 @@ public class Image {
     String pathToImage;
     Matrix matrixChangingBase;
     String label;
+    Vector data;
 
 
 
@@ -66,7 +68,7 @@ public class Image {
         int heigth = image.getHeight();
 
         //for example if image is 10x10 we have 100 pixels
-        Vector result = new Vector(width * heigth);
+        data = new Vector(width * heigth);
 
         // to obtain a vector with all the coposante represanting a pixel of image
         for (int y = 0; y < heigth; y++) {
@@ -77,15 +79,20 @@ public class Image {
                 double vert = (rgb >> 8) & 0xFF;
                 double bleu = rgb & 0xFF;
 
-                result.set(y * width + x, (rouge + vert + bleu) / 3);
+                data.set(y * width + x, (rouge + vert + bleu) / 3);
 
 
             }
         }
 
-        return result;
+        return data;
 
     }
+
+    /**
+     * setter to set the label of picture for example 18 for face that have the id 18
+     * @param label
+     */
 
     public void setLabel(String label) {
         this.label = label;
@@ -95,6 +102,10 @@ public class Image {
         return label;
     }
 
+    /**
+     * return just the label
+     * @return
+     */
     @Override
     public String toString() {
         return this.label;
@@ -155,37 +166,40 @@ public class Image {
      * @param imageNum    image number (e.g. 3 → "03")
      * @return the converted and saved image file
      */
-    public static File convertAndSave(String inputPath, int personneId, int imageNum) throws IOException {
-        BufferedImage original = ImageIO.read(new File(inputPath));
+    private static final String BASE_DIR = "./Celeba_HQ_facial_identity_dataset/train";
 
+    public static File convertAndSave(String inputPath, int personneId, int imageNum) throws IOException {
+
+        BufferedImage original = ImageIO.read(new File(inputPath));
         if (original == null) {
             throw new IOException("Impossible de lire l'image : " + inputPath);
         }
 
-        BufferedImage resized = new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g2d = resized.createGraphics();
+        BufferedImage grayscale = new BufferedImage(64, 64, BufferedImage.TYPE_BYTE_GRAY);
+        Graphics2D g2d = grayscale.createGraphics();
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2d.setRenderingHint(RenderingHints.KEY_RENDERING,     RenderingHints.VALUE_RENDER_QUALITY);
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,  RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.drawImage(original, 0, 0, 64, 64, null);
         g2d.dispose();
-        BufferedImage grayscale = new BufferedImage(64, 64, BufferedImage.TYPE_BYTE_GRAY);
-        Graphics2D g2dGray = grayscale.createGraphics();
-        g2dGray.drawImage(resized, 0, 0, null);
-        g2dGray.dispose();
 
         String personneFolder = String.format("personne_%03d", personneId);
-        String fileName       = String.format("img_%02d.png", imageNum);
+        String fileName = String.format("img_%02d.jpg", imageNum);  // ← .jpg
 
         File outputDir = new File(BASE_DIR + File.separator + personneFolder);
         if (!outputDir.exists()) outputDir.mkdirs();
 
         File output = new File(outputDir, fileName);
+        ImageIO.write(grayscale, "jpg", output);  // ← "jpg"
 
-        ImageIO.write(grayscale, "png", output);
+    return output;
+}
 
-        return output;
-    }
+    /**
+     * only for test
+     * @param args
+     * @throws FileNotFoundException
+     */
 
     public static void main(String[] args) throws FileNotFoundException {
 
