@@ -104,6 +104,41 @@ public class Vector {
 		
 		return diffVector;
 	}
+
+	/**
+	 * Calculates the difference between two vector
+	 * @param v the other vector
+	 * @return a new vector who is the difference between the vectors
+	 */
+	public Vector addition(Vector v) {
+
+		if (this.data.length != v.data.length) {
+			//throw();
+		}
+
+		Vector diffVector = new Vector(this.data.length);
+		for (int i = 0 ; i < this.data.length ; i++) {
+			diffVector.set(i, this.get(i) + v.get(i));
+		}
+
+		return diffVector;
+	}
+
+	/**
+	 * Multiplate by a scalor
+	 * @param alpha scalor
+	 * @return a new vector who is the difference between the vectors
+	 */
+	public Vector multiplicationScalar(double alpha) {
+
+
+		Vector diffVector = new Vector(this.data.length);
+		for (int i = 0 ; i < this.data.length ; i++) {
+			diffVector.set(i, this.get(i) * alpha);
+		}
+
+		return diffVector;
+	}
 	
 	/**
 	 * Calculates the euclidean distance between two vectors

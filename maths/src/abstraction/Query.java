@@ -10,11 +10,11 @@ class Query {
 
     protected double threshold_similarity;
 
-    Query(double threshold_similarity) {
+    public Query(double threshold_similarity) {
         this.threshold_similarity = threshold_similarity;
     }
 
-    Query() {
+    public Query() {
         this(1.2);
     }
 
@@ -77,6 +77,7 @@ class Query {
             if (estTrouve) {
                 break;
             }
+
         }
 
 
