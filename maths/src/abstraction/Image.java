@@ -1,4 +1,4 @@
-package abstraction;
+package math.abstraction;
 
 public class Image {
 
