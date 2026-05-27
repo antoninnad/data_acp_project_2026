@@ -1,5 +1,6 @@
 package abstraction;
 
+
 import java.util.List;
 //reading of the save file
 import java.io.PrintWriter;
@@ -19,28 +20,38 @@ public class PCA {
 	private Matrix facesCoordinates; // coordinates of every face projected into the PCA
     private Matrix eigenfaces; // eigenfaces of the database
 	
+
 	/**
 	 * Calculate the mean face based on a list of Images, by averaging pixels by pixels
-	 * 
+	 *
 	 * @param listImages list of images that has been treated before(resized and greyscale)
 	 * @return vector representing the mean face
 	 * */
 	public Vector getMeanFace(List<Image> listImages) {
-		double mean; // mean of pixels 
-		for(int j = 0; j < Image.getDimension() ; j++) { //j : index for pixels
-			for(int i = 0; i < listImages.size(); i++) { // i : index for images 
-				/*Sum pixels*/
-				mean+=listImages.get(i).getPixel().get(j);
+
+
+		try {
+			Vector mean = new Vector(listImages.getFirst().getNumberOfPixel());
+			int numberImg = listImages.size();
+
+			// 255 * 300 * 30 a worst do not overpass the max of double in java
+			for (Image img : listImages) {
+				Vector add = img.getPixel();
+				mean = mean.addition(add);
 			}
-			/*add the mean in the of the pixels in meanFace */
-			meanFace.add(mean/listImages.size());
-			mean = 0;			
+
+			//normalyse by the number of image
+			mean = mean.multiplicationScalar((double) 1.0/numberImg);
+
+			return mean;
+
+		} catch (IOException e) {
+			throw new RuntimeException("Image can be load ");
 		}
-		return meanFace
+
 	}
-	
-	centeredImages()
-	
+
+
 
 	/**
 	 * Saves the informations regarding the PCA to avoid recalculating too often
