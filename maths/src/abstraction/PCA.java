@@ -1,4 +1,4 @@
-package math.abstraction;
+package abstraction;
 
 public class PCA {
 

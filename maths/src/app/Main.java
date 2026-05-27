@@ -1,4 +1,4 @@
-package math.app;
+package app;
 
 public class Main {
 
