@@ -1,18 +1,18 @@
 package abstraction;
 
-import app.Main;
-import math.Matrix;
-
-import java.awt.*;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import math.Vector;
 
 import javax.imageio.ImageIO;
+
+import math.Matrix;
+import math.Vector;
 
 public class Image {
 

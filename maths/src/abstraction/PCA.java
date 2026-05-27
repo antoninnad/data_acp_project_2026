@@ -1,6 +1,8 @@
 package abstraction;
 
 
+import java.util.ArrayList;
+
 import java.util.List;
 //reading of the save file
 import java.io.PrintWriter;
@@ -19,10 +21,34 @@ public class PCA {
 	private Vector meanFace; //mean face found based on our database
 	private Matrix facesCoordinates; // coordinates of every face projected into the PCA
     private Matrix eigenfaces; // eigenfaces of the database
-	
+		
 
 	/**
-	 * Calculate the mean face based on a list of Images, by averaging pixels by pixels
+	 * Center images with the mean face
+	 * 
+	 * @param list of images (rezised and greyscale)
+	 * @return matrix of centered images
+	 * */
+	public Matrix centeredImages(List<Image> listImages) {
+		Matrix centeredMatrix = new Matrix(listImages.get(0).getPixel().getDimension(), listImages.size());
+		for(int i=0; i<listImages.size(); i++) {			
+			try {
+				//substracts pixels to get a centered vector and add to centeredList
+				Vector centeredVector = listImages.get(i).getPixel().difference(meanFace);
+				//add in the matrix the new centered image
+				 for (int j = 0; j < centeredVector.getDimension(); j++) {
+					 centeredMatrix.set(j, i, centeredVector.get(j)); 
+				 }
+			} catch (IOException e) {
+				//case if the file was not found
+				e.printStackTrace();
+            }
+		}
+		return centeredMatrix;
+	}
+
+
+	 /** Calculate the mean face based on a list of Images, by averaging pixels by pixels
 	 *
 	 * @param listImages list of images that has been treated before(resized and greyscale)
 	 * @return vector representing the mean face
@@ -151,3 +177,4 @@ public class PCA {
 	}
 	
 }
+	
