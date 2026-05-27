@@ -19,6 +19,7 @@ public class Image {
     String pathToImage;
     Matrix matrixChangingBase;
     String label;
+    Vector data;
 
 
 
@@ -33,6 +34,7 @@ public class Image {
 
         if (!Files.exists(folderPath)) {
             throw new FileNotFoundException("The image " + folderPath + " does not exist");
+
         }
 
     }
@@ -66,7 +68,7 @@ public class Image {
         int heigth = image.getHeight();
 
         //for example if image is 10x10 we have 100 pixels
-        Vector result = new Vector(width * heigth);
+        data = new Vector(width * heigth);
 
         // to obtain a vector with all the coposante represanting a pixel of image
         for (int y = 0; y < heigth; y++) {
@@ -77,15 +79,20 @@ public class Image {
                 double vert = (rgb >> 8) & 0xFF;
                 double bleu = rgb & 0xFF;
 
-                result.set(y * width + x, (rouge + vert + bleu) / 3);
+                data.set(y * width + x, (rouge + vert + bleu) / 3);
 
 
             }
         }
 
-        return result;
+        return data;
 
     }
+
+    /**
+     * setter to set the label of picture for example 18 for face that have the id 18
+     * @param label
+     */
 
     public void setLabel(String label) {
         this.label = label;
@@ -95,6 +102,10 @@ public class Image {
         return label;
     }
 
+    /**
+     * return just the label
+     * @return
+     */
     @Override
     public String toString() {
         return this.label;
@@ -145,6 +156,12 @@ public class Image {
 
 
     }
+
+    /**
+     * only for test
+     * @param args
+     * @throws FileNotFoundException
+     */
 
     public static void main(String[] args) throws FileNotFoundException {
 
