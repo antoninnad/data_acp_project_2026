@@ -3,6 +3,7 @@ package abstraction;
 import app.Main;
 import math.Matrix;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,7 +35,6 @@ public class Image {
 
         if (!Files.exists(folderPath)) {
             throw new FileNotFoundException("The image " + folderPath + " does not exist");
-
         }
 
     }
@@ -156,6 +156,44 @@ public class Image {
 
 
     }
+
+    /**
+     * Converts an image to 64x64 grayscale PNG format
+     * and saves it using the convention: person_XXX/img_YY.png
+     *
+     * @param inputPath   path to the source image
+     * @param personneId    person identifier (e.g. 1 → "001")
+     * @param imageNum    image number (e.g. 3 → "03")
+     * @return the converted and saved image file
+     */
+    private static final String BASE_DIR = "./Celeba_HQ_facial_identity_dataset/train";
+
+    public static File convertAndSave(String inputPath, int personneId, int imageNum) throws IOException {
+
+        BufferedImage original = ImageIO.read(new File(inputPath));
+        if (original == null) {
+            throw new IOException("Impossible de lire l'image : " + inputPath);
+        }
+
+        BufferedImage grayscale = new BufferedImage(64, 64, BufferedImage.TYPE_BYTE_GRAY);
+        Graphics2D g2d = grayscale.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.drawImage(original, 0, 0, 64, 64, null);
+        g2d.dispose();
+
+        String personneFolder = String.format("personne_%03d", personneId);
+        String fileName = String.format("img_%02d.jpg", imageNum);  // ← .jpg
+
+        File outputDir = new File(BASE_DIR + File.separator + personneFolder);
+        if (!outputDir.exists()) outputDir.mkdirs();
+
+        File output = new File(outputDir, fileName);
+        ImageIO.write(grayscale, "jpg", output);  // ← "jpg"
+
+    return output;
+}
 
     /**
      * only for test
