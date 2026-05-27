@@ -146,6 +146,47 @@ public class Image {
 
     }
 
+    /**
+     * Converts an image to 64x64 grayscale PNG format
+     * and saves it using the convention: person_XXX/img_YY.png
+     *
+     * @param inputPath   path to the source image
+     * @param personneId    person identifier (e.g. 1 → "001")
+     * @param imageNum    image number (e.g. 3 → "03")
+     * @return the converted and saved image file
+     */
+    public static File convertAndSave(String inputPath, int personneId, int imageNum) throws IOException {
+        BufferedImage original = ImageIO.read(new File(inputPath));
+
+        if (original == null) {
+            throw new IOException("Impossible de lire l'image : " + inputPath);
+        }
+
+        BufferedImage resized = new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = resized.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING,     RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,  RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.drawImage(original, 0, 0, 64, 64, null);
+        g2d.dispose();
+        BufferedImage grayscale = new BufferedImage(64, 64, BufferedImage.TYPE_BYTE_GRAY);
+        Graphics2D g2dGray = grayscale.createGraphics();
+        g2dGray.drawImage(resized, 0, 0, null);
+        g2dGray.dispose();
+
+        String personneFolder = String.format("personne_%03d", personneId);
+        String fileName       = String.format("img_%02d.png", imageNum);
+
+        File outputDir = new File(BASE_DIR + File.separator + personneFolder);
+        if (!outputDir.exists()) outputDir.mkdirs();
+
+        File output = new File(outputDir, fileName);
+
+        ImageIO.write(grayscale, "png", output);
+
+        return output;
+    }
+
     public static void main(String[] args) throws FileNotFoundException {
 
         boolean isOkay = true;
