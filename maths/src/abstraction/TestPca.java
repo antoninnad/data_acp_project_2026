@@ -18,7 +18,7 @@ public class TestPca {
 
             PCA pca = new PCA();
 
-            List<Image> images = pca.getFacesCordonates("./Celeba_HQ_facial_identity_dataset/test");
+            List<Image> images = pca.getFacesCordonates("./Celeba_HQ_facial_identity_dataset/train");
             Vector meanFace = pca.getMeanFace(images);
 
             File outputDir = new File("./testImg");
@@ -26,7 +26,7 @@ public class TestPca {
                 outputDir.mkdirs();
             }
 
-            Image.toImage(meanFace, "./testImg/test2.jpg");
+            Image.toImage(meanFace, "./testImg/test.jpg");
 
             System.out.println("TestMeanFaces passé : image moyenne enregistrée dans ./abstraction/test.jpg");
 
