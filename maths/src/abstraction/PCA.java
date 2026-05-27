@@ -64,6 +64,8 @@ public class PCA {
 			}
 
 			//normalyse by the number of image
+			mean = mean.multiplicationScalar((double) 1.0/numberImg);
+
 			meanFace = mean;
 			return mean;
 
