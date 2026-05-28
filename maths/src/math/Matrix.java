@@ -219,6 +219,15 @@ public class Matrix {
     }
     
     
+    public void setColumn(int i, Vector vector) throws OutOfRangeException {
+    	this.matrix.setColumn(i, vector.getData());
+    }
+    
+    public void setColumn(int i, double[] column) throws OutOfRangeException {
+    	this.matrix.setColumn(i, column);
+    }
+    
+    
     /**
      * Converts a Matrix to a String
      * @return A String object containing the printed Matrix
