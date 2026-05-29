@@ -43,12 +43,45 @@ public class PCA {
 	 * @param list of images (rezised and greyscale)
 	 * @return matrix of centered images
 	 * */
-//	public Matrix centeredImages(List<Image> listImages) {
-//
-//
-//
-//
-//	}
+	public Matrix centeredImages(List<Image> listImages) {
+
+
+
+		for(Image img : listImages) {
+			if (img.getVector() == null) {
+                try {
+                    img.getPixel();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+			img.setVector(
+					centredVector(img.getVector())
+			);
+		}
+
+		// making the matrix m x n with image on the column
+		int m = listImages.getFirst().getVector().getDimension();
+		int n = listImages.size();
+
+		Matrix result = new Matrix(m, n);
+
+		int colomunIndex = 0;
+
+		for (Image img : listImages) {
+
+			Vector v = img.getVector();
+
+			for (int i = 0; i < m; i++) {
+				result.set(i , colomunIndex, v.get(i));
+			}
+
+			colomunIndex++;
+		}
+
+		return result;
+	}
 
 
 	 /** Calculate the mean face based on a list of Images, by averaging pixels by pixels

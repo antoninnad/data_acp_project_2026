@@ -11,7 +11,29 @@ public class TestPca {
 
     public static void main(String[] args) {
         TestChangingBaseImage();
-        TestcentredVector();
+        //TestcentredVector();
+        testcenteredImages();
+    }
+
+    public static void testcenteredImages() {
+        PCA pca = new PCA();
+
+        try {
+            Image img = new Image("./data_filtred/meanface.jpg", "test");
+            img.getPixel();
+
+            pca.setMeanFace(img.getVector());
+
+            System.out.println("meanFace = " + img.getVector());
+
+            List<Image> images = pca.getFacesCordonates("./data_filtred/test");
+            Matrix m = pca.centeredImages(images);
+
+            System.out.println(m);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public static void TestcentredVector() {
