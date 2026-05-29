@@ -26,7 +26,7 @@ public class PCA {
 	 * @param list of images (rezised and greyscale)
 	 * @return matrix of centered images
 	 * */
-	public Matrix centeredImages(List<Image> listImages) {
+	public Matrix centeredImages(List<Image> listImages) throws IOException {
 		Matrix centeredMatrix = new Matrix(listImages.get(0).getPixel().getDimension(), listImages.size());
 		for(int i=0; i<listImages.size(); i++) {
 			try {

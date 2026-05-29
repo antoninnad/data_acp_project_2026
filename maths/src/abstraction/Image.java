@@ -22,7 +22,9 @@ public class Image {
     String label;
     Vector data;
 
-
+    Image(Vector data) {
+        this.data = data;
+    }
 
     /**
      * @param pathToImage path to the dataset that we want to use
@@ -166,7 +168,7 @@ public class Image {
      * @param imageNum    image number (e.g. 3 → "03")
      * @return the converted and saved image file
      */
-    private static final String BASE_DIR = "./Celeba_HQ_facial_identity_dataset/train";
+    private static final String BASE_DIR = "../data_filtred/test";  // Base directory for converted images
 
     public static File convertAndSave(String inputPath, int personneId, int imageNum) throws IOException {
 
@@ -222,5 +224,20 @@ public class Image {
         if (!isOkay) {
             System.out.println("Test non passé");
         }
+    }
+
+    Vector changingBaseImage(Matrix changeOfBasis) {
+
+
+        Matrix matrixReduction = new Matrix(changeOfBasis.getNbRows(), 1);
+
+        //change of basis
+        matrixReduction = changeOfBasis.multiply(data.VectorToMatrix());
+
+        data = matrixReduction.MatrixToVector();
+
+
+
+        return data;
     }
 }
