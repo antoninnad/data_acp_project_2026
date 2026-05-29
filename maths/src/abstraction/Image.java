@@ -26,6 +26,14 @@ public class Image {
         this.data = data;
     }
 
+    Vector getVector() {
+        return data;
+    }
+
+    void setVector(Vector data) {
+        this.data = data;
+    }
+
     /**
      * @param pathToImage path to the dataset that we want to use
      */
@@ -70,7 +78,7 @@ public class Image {
         int heigth = image.getHeight();
 
         //for example if image is 10x10 we have 100 pixels
-        data = new Vector(width * heigth);
+        this.data = new Vector(width * heigth);
 
         // to obtain a vector with all the coposante represanting a pixel of image
         for (int y = 0; y < heigth; y++) {
@@ -86,6 +94,8 @@ public class Image {
 
             }
         }
+
+
 
         return data;
 
@@ -157,6 +167,52 @@ public class Image {
         ImageIO.write(image, "jpg", new File(pathToSave));
 
 
+    }
+
+    public static void centeredVectorToImage(Vector imgVectorized, String pathToSave) throws IOException {
+        int dimension = Math.toIntExact(Math.round(Math.sqrt(imgVectorized.getDimension())));
+
+        BufferedImage image = new BufferedImage(
+                dimension,
+                dimension,
+                BufferedImage.TYPE_BYTE_GRAY
+        );
+
+        double min = imgVectorized.get(0);
+        double max = imgVectorized.get(0);
+
+        for (int i = 0; i < imgVectorized.getDimension(); i++) {
+            double value = imgVectorized.get(i);
+
+            if (value < min) {
+                min = value;
+            }
+
+            if (value > max) {
+                max = value;
+            }
+        }
+
+        for (int y = 0; y < dimension; y++) {
+            for (int x = 0; x < dimension; x++) {
+                int index = y * dimension + x;
+
+                double value = imgVectorized.get(index);
+
+                int grey;
+
+                if (max == min) {
+                    grey = 0;
+                } else {
+                    grey = (int) Math.round(255 * (value - min) / (max - min));
+                }
+
+                int rgb = (grey << 16) | (grey << 8) | grey;
+                image.setRGB(x, y, rgb);
+            }
+        }
+
+        ImageIO.write(image, "jpg", new File(pathToSave));
     }
 
     /**

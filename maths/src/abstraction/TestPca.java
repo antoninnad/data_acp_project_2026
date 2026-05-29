@@ -11,7 +11,33 @@ public class TestPca {
 
     public static void main(String[] args) {
         TestChangingBaseImage();
-        TestMeanFaces();
+        TestcentredVector();
+    }
+
+    public static void TestcentredVector() {
+        PCA pca = new PCA();
+
+        try {
+            Image img = new Image("./data_filtred/meanface.jpg", "test");
+            img.getPixel();
+
+            pca.setMeanFace(img.getVector());
+
+            System.out.println("meanFace = " + img.getVector());
+
+            Image imgToCentralize = new Image("./data_filtred/test/005/img_01.jpg", "test2");
+            imgToCentralize.getPixel(); // IMPORTANT
+
+            System.out.println("v = " + imgToCentralize.getVector());
+
+            Image.centeredVectorToImage(
+                    pca.centredVector(imgToCentralize.getVector()),
+                    "./test/imgCentralize.jpg"
+            );
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public  static  void TestChangingBaseImage() {
@@ -68,15 +94,15 @@ public class TestPca {
 
             PCA pca = new PCA();
 
-            List<Image> images = pca.getFacesCordonates("./data_filtred/train");
+            List<Image> images = pca.getFacesCordonates("./data_filtred/test");
             Vector meanFace = pca.getMeanFace(images);
 
-            File outputDir = new File("./testImg");
+            File outputDir = new File("./data_filtred");
             if (!outputDir.exists()) {
                 outputDir.mkdirs();
             }
 
-            Image.toImage(meanFace, "./testImg/test.jpg");
+            Image.toImage(meanFace, "./data_filtred/meanface_test.jpg");
 
             System.out.println("TestMeanFaces passé : image moyenne enregistrée dans ./abstraction/test.jpg");
 

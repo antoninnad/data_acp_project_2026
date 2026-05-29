@@ -41,3 +41,5 @@ replay_pid*
 # Project-specific large/data folders
 .metadata/
 Celeba_HQ_facial_identity_dataset/
+./maths/bin
+./bin
