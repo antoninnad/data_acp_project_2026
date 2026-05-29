@@ -166,11 +166,11 @@ public class PCA {
 	 * @param matrix containing centered images
 	 * @return covariate matrix (different dimension
 	 * */
-	
+	/* 
 	private Matrix covariateMatrix(Matrix images) {
 		
 	}
-	
+	*/
 
 	/**
 	 * Loads the informations regarding the PCA to avoid recalculating too often

@@ -7,6 +7,7 @@ import java.io.IOException;
 public class Main {
 	public static void main(String[] args) {
 		System.out.println("test");
+		/* 
 		try {
 			System.out.println("Loading images");
 			List<Image> images = ImageLoader.loadFromDirectory("../Celeba_HQ_facial_identity_dataset/test");
@@ -15,6 +16,7 @@ public class Main {
 		}catch (IOException e){
 			System.err.println("Erreur : "+e.getMessage());
 		}
+			*/
 	}
 
 }
