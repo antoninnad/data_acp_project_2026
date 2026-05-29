@@ -22,7 +22,9 @@ public class Image {
     String label;
     Vector data;
 
-
+    Image(Vector data) {
+        this.data = data;
+    }
 
     /**
      * @param pathToImage path to the dataset that we want to use
@@ -222,5 +224,20 @@ public class Image {
         if (!isOkay) {
             System.out.println("Test non passé");
         }
+    }
+
+    Vector changingBaseImage(Matrix changeOfBasis) {
+
+
+        Matrix matrixReduction = new Matrix(changeOfBasis.getNbRows(), 1);
+
+        //change of basis
+        matrixReduction = changeOfBasis.multiply(data.VectorToMatrix());
+
+        data = matrixReduction.MatrixToVector();
+
+
+
+        return data;
     }
 }

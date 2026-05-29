@@ -194,5 +194,22 @@ public class Vector {
 		display += "]";
 		return display;
     }
-	
+
+
+	/**
+	 * Vector to Matrix
+	 * @return a matrix dimension nx1
+	 */
+	public Matrix VectorToMatrix() {
+
+		Matrix result = new Matrix(getDimension(), 1);
+		int index = 0;
+		for (double number : data) {
+			result.set(index++, 0, number);
+		}
+
+		return result;
+	}
+
+
 }
