@@ -9,7 +9,7 @@ public class Main {
 		System.out.println("test");
 		try {
 			System.out.println("Loading images");
-			List<Image> images = ImageLoader.loadFromDirectory("../Celeba_HQ_facial_identity_dataset/train");
+			List<Image> images = ImageLoader.loadFromDirectory("../Celeba_HQ_facial_identity_dataset/test");
 			System.out.println("Terminé : "+images.size()+"images converties");
 
 		}catch (IOException e){

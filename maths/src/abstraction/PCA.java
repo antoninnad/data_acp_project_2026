@@ -159,17 +159,17 @@ public class PCA {
 
 	}
 	
-	
+
 	/**
 	 * Calculate the covariate matrix 
 	 * 
 	 * @param matrix containing centered images
 	 * @return covariate matrix (different dimension
 	 * */
+	
 	private Matrix covariateMatrix(Matrix images) {
 		
 	}
-	
 	
 
 	/**
