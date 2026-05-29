@@ -113,6 +113,27 @@ public class PCA {
 	}
 
 
+	
+	/**
+	 * Calculate the covariate matrix 
+	 * 
+	 * @param matrix containing centered images (dimension = nxp where n>p)
+	 * @return covariate matrix (dimension = pxp)
+	 * */
+	public Matrix covariateMatrix(Matrix imagesMatrix) {
+		int p = imagesMatrix.getNbRows();
+		//create a square matrix to stock the covariate matrix
+		Matrix covariateMatrix = new Matrix(p,p);
+		//calculate the transposed matrix
+		Matrix transposedMatrix = imagesMatrix.transpose();
+		//calculate the covariate matrix by multiplying imagesMatrix with its transposed matrix
+		covariateMatrix = transposedMatrix.multiply(imagesMatrix);
+		return covariateMatrix;
+	}
+	
+	
+
+	
 	/**
 	 * Saves the informations regarding the PCA to avoid recalculating too often
 	 * @param filename is the name of the file where the informations are saved
@@ -159,18 +180,7 @@ public class PCA {
 
 	}
 	
-	
-	/**
-	 * Calculate the covariate matrix 
-	 * 
-	 * @param matrix containing centered images
-	 * @return covariate matrix (different dimension
-	 * */
-	private Matrix covariateMatrix(Matrix images) {
-		
-	}
-	
-	
+
 
 	/**
 	 * Loads the informations regarding the PCA to avoid recalculating too often
