@@ -3,13 +3,10 @@ package abstraction;
 
 import java.util.ArrayList;
 
+import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 //reading of the save file
-import java.io.PrintWriter;
-import java.io.FileWriter;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Scanner;
 
 import math.Vector;
@@ -21,23 +18,23 @@ public class PCA {
 	private Vector meanFace; //mean face found based on our database
 	private Matrix facesCoordinates; // coordinates of every face projected into the PCA
     private Matrix eigenfaces; // eigenfaces of the database
-		
+
 
 	/**
 	 * Center images with the mean face
-	 * 
+	 *
 	 * @param list of images (rezised and greyscale)
 	 * @return matrix of centered images
 	 * */
 	public Matrix centeredImages(List<Image> listImages) {
 		Matrix centeredMatrix = new Matrix(listImages.get(0).getPixel().getDimension(), listImages.size());
-		for(int i=0; i<listImages.size(); i++) {			
+		for(int i=0; i<listImages.size(); i++) {
 			try {
 				//substracts pixels to get a centered vector and add to centeredList
 				Vector centeredVector = listImages.get(i).getPixel().difference(meanFace);
 				//add in the matrix the new centered image
 				 for (int j = 0; j < centeredVector.getDimension(); j++) {
-					 centeredMatrix.set(j, i, centeredVector.get(j)); 
+					 centeredMatrix.set(j, i, centeredVector.get(j));
 				 }
 			} catch (IOException e) {
 				//case if the file was not found
@@ -69,14 +66,51 @@ public class PCA {
 			//normalyse by the number of image
 			mean = mean.multiplicationScalar((double) 1.0/numberImg);
 
+			meanFace = mean;
 			return mean;
 
 		} catch (IOException e) {
-			throw new RuntimeException("Image can be load ");
+			throw new RuntimeException("Image can be load " + e);
 		}
 
 	}
 
+	public static List<Image> getFacesCordonates(String sourceDir) throws IOException {
+		File root = new File(sourceDir);
+		File[] personneFolders = root.listFiles(File::isDirectory);
+
+		if (personneFolders == null) {
+			throw new IOException("Répertoire introuvable : " + sourceDir);
+		}
+
+		List<Image> images = new ArrayList<>();
+
+		for (File personneFolder : personneFolders) {
+			if (!personneFolder.getName().matches("\\d+")) {
+				continue;
+			}
+
+			int personneId = Integer.parseInt(personneFolder.getName());
+
+			File[] files = personneFolder.listFiles(f ->
+					f.getName().endsWith(".jpg") || f.getName().endsWith(".png")
+			);
+
+			if (files == null) continue;
+
+			for (int i = 0; i < files.length; i++) {
+				// utilise convertAndSave de Image
+				File converted = Image.convertAndSave(
+						files[i].getAbsolutePath(),
+						personneId,
+						i + 1
+				);
+				images.add(new Image(converted.getAbsolutePath(), personneFolder.getName()));
+			}
+		}
+
+		return images;
+	}
 
 
 	/**
@@ -88,43 +122,43 @@ public class PCA {
 			//Save the number of axes kept
 			writer.println(this.numberOfKeptAxes);
 			writer.println();
-			
+
 			//Save the mean face
 			writer.println(this.meanFace.getDimension());
 			for (int i = 0 ; i < this.meanFace.getDimension() ; i++) {
 				writer.println(this.meanFace.get(i) + " ");
-				
+
 			}
 			writer.println();
-			
-			//Save the coordinates of the faces 
+
+			//Save the coordinates of the faces
 			writer.println();
 			writer.println(this.facesCoordinates.getNbRows() + " " + this.facesCoordinates.getNbColumns());
 			for (int i = 0 ; i < this.facesCoordinates.getNbRows(); i++ ) {
 				for (int j = 0; j < this.facesCoordinates.getNbColumns(); j++) {
 					writer.println(this.facesCoordinates.get(i,j) + " ");
 				}
-				writer.println(); 
+				writer.println();
 			}
-			
+
 			writer.println();
-			
+
 			//Save the eigenfaces
 			writer.println(this.eigenfaces.getNbRows() + " " + this.eigenfaces.getNbColumns());
             for (int i = 0; i < this.eigenfaces.getNbRows(); i++) {
                 for (int j = 0; j < this.eigenfaces.getNbColumns(); j++) {
                     writer.print(this.eigenfaces.get(i, j) + " ");
                 }
-                writer.println(); 
+                writer.println();
             }
             writer.println();
 			System.out.println("The informations concerning the PCA are saved to " + filename);
 		} catch (IOException e) {
 			System.err.println("Error while trying to save the informations" + e.getMessage());
 		}
-		
+
 	}
-	
+
 	/**
 	 * Loads the informations regarding the PCA to avoid recalculating too often
 	 * @param filename is the name of the file where the informations are saved
@@ -135,7 +169,7 @@ public class PCA {
 				//Load numberOfKeptAxes (int)
                 this.numberOfKeptAxes = scanner.nextInt();
 			}
-			
+
             //Load dimension of vector mean face and the values
             if (scanner.hasNextInt()) {
                  int meanFaceDim = scanner.nextInt();
@@ -144,7 +178,7 @@ public class PCA {
                      this.meanFace.set(i, scanner.nextDouble());
                  }
              }
-                
+
              //Load facesCoordinates matrix
              if (scanner.hasNextInt()) {
                  int rowsOfFaces = scanner.nextInt();
@@ -156,7 +190,7 @@ public class PCA {
                      }
                  }
              }
-             
+
              //Load eigenfaces
              if (scanner.hasNextInt()) {
                  int rowsOfEigenfaces = scanner.nextInt();
@@ -168,13 +202,12 @@ public class PCA {
                      }
                  }
              }
-             
+
              System.out.println("The informations concerning the PCA are successfully loaded from " + filename);
-                
+
 		} catch (IOException e) {
 			System.err.println("Error while trying to load the informations" + e.getMessage());
 		}
 	}
-	
+
 }
-	

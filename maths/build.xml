@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project PCA Face Recognition">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <!--define folder properties-->
+    <property name="dir.buildfile" value="."/>
+    <property name="dir.workspace" value="${dir.buildfile}/.."/>
+    <property name="dir.jarfile" value="${dir.buildfile}"/>
+	<property name="dir.bindir" value="${dir.buildfile}/bin/"/>
+	<property name="dir.docdir" value="${dir.buildfile}/doc/"/>
+	<property name="dir.srcdir" value="${dir.buildfile}/src"/> 
+	<property name="jarfile" value="pcaman.jar"/>
+	
+	<target name="create_run_jar" depends="build">
+        <jar destfile="${dir.jarfile}/${jarfile}" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="math.Matrix"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="bin"/>
+        </jar>
+    </target>
+		
+
+	<!-- Delete files -->
+	
+	<target name="clean">
+		<delete dir="${dir.bindir}"/>
+		<delete dir="${dir.docdir}"/>		
+<!--<delete file="${dir.jarfile}/exe_tp2.jar"/>-->
+	</target>
+	
+	
+	<!-- Build - compiling the files -->
+	
+	<target name="build" depends="clean">
+		<mkdir dir="${dir.bindir}" />
+		<echo message="Compiling java files" />
+		<javac srcdir="${dir.buildfile}/" destdir="${dir.bindir}" />
+	</target>
+	
+	<!-- Run - executing the programm -->
+	
+	<target name="run" depends="build">
+		<java jar="${dir.jarfile}/${jarfile}" fork="true"/>
+	</target>
+	
+
+	<!-- Doc - generates the documentation -->
+	<target name="doc">
+		<mkdir dir="${dir.docdir}" />
+		<javadoc sourcepath="${dir.buildfile}/" destdir="${dir.docdir}">
+			<fileset dir="${dir.buildfile}/src" defaultexcludes="yes">
+				<include name="**" />
+			</fileset>
+		</javadoc>
+	</target>
+
+
+	
+	
+	
+</project>

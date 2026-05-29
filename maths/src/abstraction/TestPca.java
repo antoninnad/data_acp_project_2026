@@ -14,15 +14,11 @@ public class TestPca {
 
     public static void TestMeanFaces() {
         try {
-            List<Image> images = List.of(
-                    new Image("./Celeba_HQ_facial_identity_dataset/test/5/91.jpg", "5"),
-                    new Image("./Celeba_HQ_facial_identity_dataset/test/5/822.jpg", "5"),
-                    new Image("./Celeba_HQ_facial_identity_dataset/test/5/8222.jpg", "5"),
-                    new Image("./Celeba_HQ_facial_identity_dataset/test/5/9770.jpg", "5"),
-                    new Image("./Celeba_HQ_facial_identity_dataset/test/5/9787.jpg", "5")
-            );
+
 
             PCA pca = new PCA();
+
+            List<Image> images = pca.getFacesCordonates("./Celeba_HQ_facial_identity_dataset/train");
             Vector meanFace = pca.getMeanFace(images);
 
             File outputDir = new File("./testImg");

@@ -39,6 +39,12 @@ public class Vector {
         return data[i];
     }
 
+    
+    public double[] getData() {
+        return data;
+    }
+    
+    
     /**
      * Gets the size of the vector 
      * @return an integer
