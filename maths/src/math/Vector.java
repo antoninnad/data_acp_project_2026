@@ -79,17 +79,19 @@ public class Vector {
 	
 	
 	/**
-	 * Normalizes each value of the vector using the norm
+	 * Normalises each value of the vector using the norm
 	 */
-	public void normalise() {
+	public Vector normalise() {
 		double vectorNorm = this.norm();
+		Vector normalisedVect = new Vector(this.getDimension());
 		//Avoid the division by 0
 		if (vectorNorm > 0) {
 			for (int i = 0 ; i < data.length ; i++) {
 				// Divide each value of the vector by the norm of the vector
-				data[i] = data[i] / vectorNorm;
+				normalisedVect.set(i, data[i] / vectorNorm);
 			}
 		}
+		return normalisedVect;
 	}
 	
 	/**
