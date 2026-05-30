@@ -1,17 +1,19 @@
 package abstraction;
 
 
-import java.util.ArrayList;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 //reading of the save file
 import java.util.Scanner;
 
-import math.Vector;
 import math.Matrix;
-import abstraction.Image;
+import math.Vector;
 
 public class PCA {
 	private int numberOfKeptAxes; // number of axes that are relevant for the PCA
@@ -27,20 +29,23 @@ public class PCA {
 	 * @return matrix of centered images
 	 * */
 	public Matrix centeredImages(List<Image> listImages) {
-		Matrix centeredMatrix = new Matrix(listImages.get(0).getPixel().getDimension(), listImages.size());
-		for(int i=0; i<listImages.size(); i++) {
-			try {
-				//substracts pixels to get a centered vector and add to centeredList
-				Vector centeredVector = listImages.get(i).getPixel().difference(meanFace);
-				//add in the matrix the new centered image
-				 for (int j = 0; j < centeredVector.getDimension(); j++) {
-					 centeredMatrix.set(j, i, centeredVector.get(j));
-				 }
+		Matrix centeredMatrix = null;
+		try {
+			centeredMatrix = new Matrix(listImages.get(0).getPixel().getDimension(), listImages.size());
+
+			for(int i=0; i<listImages.size(); i++) {
+					//substracts pixels to get a centered vector and add to centeredList
+					Vector centeredVector = listImages.get(i).getPixel().difference(meanFace);
+					//add in the matrix the new centered image
+					 for (int j = 0; j < centeredVector.getDimension(); j++) {
+						 centeredMatrix.set(j, i, centeredVector.get(j));
+					 }
+			}
+
 			} catch (IOException e) {
 				//case if the file was not found
 				e.printStackTrace();
             }
-		}
 		return centeredMatrix;
 	}
 

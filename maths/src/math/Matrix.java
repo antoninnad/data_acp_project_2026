@@ -1,16 +1,12 @@
 package math;
 
 import math.exception.DimensionMismatchException;
-
 import math.exception.NoDataException;
 import math.exception.NullArgumentException;
 import math.exception.OutOfRangeException;
-import math.linear.Array2DRowRealMatrix;
-import math.linear.BlockRealMatrix;
+import math.linear.EigenDecomposition;
 import math.linear.MatrixUtils;
 import math.linear.RealMatrix;
-import math.Vector;
-import math.linear.EigenDecomposition;
 
 
 

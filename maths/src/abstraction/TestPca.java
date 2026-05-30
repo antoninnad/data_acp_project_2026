@@ -1,5 +1,6 @@
 package abstraction;
 
+import math.Matrix;
 import math.Vector;
 
 import java.io.File;
@@ -18,7 +19,7 @@ public class TestPca {
 
             PCA pca = new PCA();
 
-            List<Image> images = pca.getFacesCordonates("./Celeba_HQ_facial_identity_dataset/train");
+            List<Image> images = PCA.getFacesCordonates("./Celeba_HQ_facial_identity_dataset/train");
             Vector meanFace = pca.getMeanFace(images);
 
             File outputDir = new File("./testImg");
@@ -26,10 +27,14 @@ public class TestPca {
                 outputDir.mkdirs();
             }
 
+           
+            //test meanFace
             Image.toImage(meanFace, "./testImg/test.jpg");
-
             System.out.println("TestMeanFaces passé : image moyenne enregistrée dans ./abstraction/test.jpg");
-
+         
+ 
+   
+            
         } catch (IOException e) {
             System.err.println("TestMeanFaces non passé : erreur d'entrée/sortie");
             e.printStackTrace();
@@ -38,4 +43,6 @@ public class TestPca {
             e.printStackTrace();
         }
     }
+    
 }
+
