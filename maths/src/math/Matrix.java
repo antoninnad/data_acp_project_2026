@@ -306,23 +306,7 @@ public class Matrix {
     	return (this.matrix.hashCode()+this.diagonalisation.hashCode())/2;
     }
     
-    public static void main(String[] args) {
-    	double[][] array = {{1.2, 4.7, 8.1},{4.7, 1.2, 4.3},{8.1, 4.3, -3.0}};
-    	Matrix m = new Matrix(array);  
-//    	System.out.println(m);
-//    	System.out.println(m.transpose());
-//    	System.out.println(m.get(2, 1));
-//    	System.out.println(m.trace());
-//    	System.out.println(m.isSquare());
-//    	System.out.println(m.getNbRows());
-//    	System.out.println(m.getNbColumns());
 
-    	System.out.println(m.getEigenvalues());
-    	System.out.println(m.getEigenvectors());
-    	
-    	
-    	
-    }
 
     /**
      * Matrix to Vector
