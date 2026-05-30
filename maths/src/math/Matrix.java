@@ -222,8 +222,61 @@ public class Matrix {
     public void setColumn(int i, double[] column) throws OutOfRangeException {
     	this.matrix.setColumn(i, column);
     }
+
+	public Matrix covariateMatrix() {
+    	return this.transpose().multiply(this);
+    }
     
     
+    public void normColumns() {
+    	normColumns(0,getNbColumns()-1);
+    }
+
+	public void normColumns(int start, int end) {
+    	for (int i=start; i<end; i++) {
+    		setColumn(i, getColumn(i).normalise());
+    	}
+    }
+    
+    public void addColumns(Matrix m) throws DimensionMismatchException {
+    	
+    	if (m.getNbRows() != this.getNbRows()){
+    		throw new DimensionMismatchException(m.getNbRows(),  this.getNbRows());
+    	}
+    	
+    	RealMatrix extendedMatrix = matrix.createMatrix(this.getNbRows(), this.getNbColumns()+m.getNbColumns());
+    	extendedMatrix.setSubMatrix(this.matrix.getData(), 0, 0);
+    	extendedMatrix.setSubMatrix(m.getRealMatrix().getData(), 0, this.getNbColumns());
+    	this.matrix = extendedMatrix;
+    }
+    
+    public void addRows(Matrix m) throws DimensionMismatchException {
+    	
+    	if (m.getNbColumns() != this.getNbColumns()){
+    		throw new DimensionMismatchException(m.getNbColumns(),  this.getNbColumns());
+    	}
+    	
+    	RealMatrix extendedMatrix = matrix.createMatrix(this.getNbRows()+m.getNbRows(), this.getNbColumns());
+    	extendedMatrix.setSubMatrix(this.matrix.getData(), 0, 0);
+    	extendedMatrix.setSubMatrix(m.getRealMatrix().getData(), this.getNbRows(), 0);
+    	this.matrix = extendedMatrix;
+    }
+    
+    
+    public Matrix getSubRows(int start, int end) {
+    	return new Matrix(matrix.getSubMatrix(start, end, 0, this.getNbColumns()-1));
+    }
+    
+    public Matrix getSubColumns(int start, int end) {
+    	return new Matrix(matrix.getSubMatrix(0,  this.getNbColumns()-1, start, end));
+    }
+    
+    
+    public Matrix subMatrixFirstColumns(int colLimit) {
+    	return this.getSubColumn(0, colLimit);
+    }
+
+	
     /**
      * Converts a Matrix to a String
      * @return A String object containing the printed Matrix
