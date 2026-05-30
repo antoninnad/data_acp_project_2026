@@ -27,7 +27,6 @@
 	<target name="clean">
 		<delete dir="${dir.bindir}"/>
 		<delete dir="${dir.docdir}"/>		
-<!--<delete file="${dir.jarfile}/exe_tp2.jar"/>-->
 	</target>
 	
 	
