@@ -278,7 +278,7 @@ public class PCA {
 	 * Loads the informations regarding the PCA to avoid recalculating too often
 	 * @param filename is the name of the file where the informations are saved
 	 */
-	public void loadFromFile(String filename) {
+	public void loadFromFile() {
 		try (Scanner scanner = new Scanner(new BufferedReader(new FileReader(filename)))) {
 			if (scanner.hasNextInt()) {
 				//Load numberOfKeptAxes (int)
