@@ -3,6 +3,7 @@ package abstraction;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,7 +26,7 @@ public class PCA {
 	private Vector eigenvalues; // Necessary if we want to plot the eigenvalue graph "dynamically"
 	private List<Image> images;  // List of all the images considered
 	private Matrix cov;
-	private final static String sourceDir = "";
+	private final static String sourceDir = "./Celeba_HQ_facial_identity_dataset/train/personne_005/";
     private final static String filename = ".PCAsave";
     private final static double eigensumThreshold = 0.8;
 
@@ -44,14 +45,16 @@ public class PCA {
 			index += 1;
 		}
 
-
+		System.out.println("01");
 		// Computing or reading the PCA data (eigen elements) depending on the save file's existence
     	try {
-    		
+    		System.out.println("02");
     		// Trying to load data from the save file if it exists
     		loadFromFile();
+    		System.out.println("03");
 
     	} catch (IOException file_error) {
+    		System.out.println("04");
     		
     		// If it doesn't exist, compute the data (the new images base)
 
@@ -324,7 +327,20 @@ public class PCA {
 
 	}
 
+	public static void main(String[] args) throws FileNotFoundException {
+		System.out.println("a");
+		 try {
+			 System.out.println("b");
+			 PCA pca = new PCA();
+			 System.out.println("c");
+		 } catch (IOException e) {
+			 System.out.println("d");
+			 throw new FileNotFoundException(); 
+		 
+		 }
+			 
 
+	 }
 	
 
 }
