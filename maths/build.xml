@@ -22,7 +22,7 @@
 	<target name="create_run_jar" depends="build">
         <jar destfile="${dir.jarfile}/${jarfile}" filesetmanifest="mergewithoutmain">
             <manifest>
-                <attribute name="Main-Class" value="math.Matrix"/>
+                <attribute name="Main-Class" value="abstraction.PCA"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
             <fileset dir="bin"/>
@@ -43,13 +43,7 @@
 	<target name="build" depends="clean">
 		<mkdir dir="${dir.bindir}" />
 		<echo message="Compiling java files" />
-		<javac srcdir="${dir.buildfile}/" destdir="${dir.bindir}" includeantruntime="false">
-			<classpath refid="javafx.classpath"/>
-			<compilerarg value="--module-path"/>
-			<compilerarg path="${dir.libdir}"/>
-			<compilerarg value="--add-modules"/>
-			<compilerarg value="javafx.base,javafx.graphics,javafx.controls,javafx.fxml"/>
-		</javac>
+		<javac srcdir="${dir.buildfile}/" destdir="${dir.bindir}" includeantruntime="false"/>
 	</target>
 	
 	<!-- Run - executing the programm -->
