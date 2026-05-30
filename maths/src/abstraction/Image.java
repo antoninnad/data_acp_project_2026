@@ -68,7 +68,7 @@ public class Image {
      * méthode qui parcours chaque pixel d'une image et les mets dans un vecteur
      * @return vecteur avec chaque composante qui correspont à un pixel
      */
-    Vector getPixel() throws IOException {
+    Vector getPixels() throws IOException {
 
 
         //reading the image
@@ -267,7 +267,7 @@ public class Image {
             Image t = new Image("./Celeba_HQ_facial_identity_dataset/test/5/91.jpg", "test");
 
             try {
-                Vector a = t.getPixel();
+                Vector a = t.getPixels();
                 Image.toImage(a, "./test.jpg");
 
             } catch (IOException e) {
