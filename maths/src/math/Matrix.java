@@ -67,7 +67,7 @@ public class Matrix {
      * @return matrix matrix attribut of this object
      */
     public RealMatrix getRealMatrix() {
-    	return this.getRealMatrix();
+    	return this.matrix;
     }
 	
     
@@ -81,7 +81,7 @@ public class Matrix {
     public Matrix multiply(Matrix m) throws DimensionMismatchException {
     	return new Matrix(this.matrix.multiply(m.getRealMatrix()));
     }
-    
+
     
     /**
      * Computes the transpose matrix of this object
@@ -260,9 +260,28 @@ public class Matrix {
     	
     	
     }
-    
-    
-    
+
+    /**
+     * Matrix to Vector
+     * @return a vector dimension n
+     */
+    public Vector MatrixToVector() {
+
+        if (getNbColumns() != 1) {
+            throw new RuntimeException("Matrix shold be nx1 to be transform to a vector");
+        }
+
+        Vector result = new Vector(getNbRows());
+
+        for (int i = 0; i < getNbRows(); i++) {
+            result.set(i, getRealMatrix().getEntry(i, 0));
+        }
+
+        return result;
+    }
+
+
+
 }
 
 

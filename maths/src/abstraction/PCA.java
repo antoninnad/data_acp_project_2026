@@ -21,6 +21,23 @@ public class PCA {
 	private Matrix facesCoordinates; // coordinates of every face projected into the PCA
     private Matrix eigenfaces; // eigenfaces of the database
 
+	public void setMeanFace(Vector meanFace) {
+		this.meanFace = meanFace;
+	}
+
+	public Vector getMeanFace() {
+		return meanFace;
+	}
+
+	public Vector centredVector(Vector v) {
+		Vector meanFace = getMeanFace();
+
+		if (meanFace == null) {
+			throw new RuntimeException("Vector mean face is null");
+		}
+
+		return v.difference(meanFace);
+	}
 
 	/**
 	 * Center images with the mean face
@@ -29,6 +46,7 @@ public class PCA {
 	 * @return matrix of centered images
 	 * */
 	public Matrix centeredImages(List<Image> listImages) {
+<<<<<<< HEAD
 		Matrix centeredMatrix = null;
 		try {
 			centeredMatrix = new Matrix(listImages.get(0).getPixel().getDimension(), listImages.size());
@@ -47,6 +65,45 @@ public class PCA {
 				e.printStackTrace();
             }
 		return centeredMatrix;
+=======
+
+
+
+		for(Image img : listImages) {
+			if (img.getVector() == null) {
+                try {
+                    img.getPixel();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+			img.setVector(
+					centredVector(img.getVector())
+			);
+		}
+
+		// making the matrix m x n with image on the column
+		int m = listImages.getFirst().getVector().getDimension();
+		int n = listImages.size();
+
+		Matrix result = new Matrix(m, n);
+
+		int colomunIndex = 0;
+
+		for (Image img : listImages) {
+
+			Vector v = img.getVector();
+
+			for (int i = 0; i < m; i++) {
+				result.set(i , colomunIndex, v.get(i));
+			}
+
+			colomunIndex++;
+		}
+
+		return result;
+>>>>>>> c42175db6068c375af2e5f087e150721e06899bb
 	}
 
 
@@ -118,6 +175,27 @@ public class PCA {
 	}
 
 
+
+	/**
+	 * Calculate the covariate matrix
+	 *
+	 * @param Matrix containing centered images (dimension = nxp where n>p)
+	 * @return covariate matrix (dimension = pxp)
+	 * */
+	public Matrix covariateMatrix(Matrix imagesMatrix) {
+		int p = imagesMatrix.getNbRows();
+		//create a square matrix to stock the covariate matrix
+		Matrix covariateMatrix = new Matrix(p,p);
+		//calculate the transposed matrix
+		Matrix transposedMatrix = imagesMatrix.transpose();
+		//calculate the covariate matrix by multiplying imagesMatrix with its transposed matrix
+		covariateMatrix = transposedMatrix.multiply(imagesMatrix);
+		return covariateMatrix;
+	}
+
+
+
+
 	/**
 	 * Saves the informations regarding the PCA to avoid recalculating too often
 	 * @param filename is the name of the file where the informations are saved
@@ -163,6 +241,19 @@ public class PCA {
 		}
 
 	}
+	
+
+	/**
+	 * Calculate the covariate matrix 
+	 * 
+	 * @param matrix containing centered images
+	 * @return covariate matrix (different dimension
+	 * */
+	
+//	private Matrix covariateMatrix(Matrix images) {
+//
+//	}
+	
 
 	/**
 	 * Loads the informations regarding the PCA to avoid recalculating too often
