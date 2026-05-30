@@ -8,8 +8,16 @@
     <property name="dir.jarfile" value="${dir.buildfile}"/>
 	<property name="dir.bindir" value="${dir.buildfile}/bin/"/>
 	<property name="dir.docdir" value="${dir.buildfile}/doc/"/>
-	<property name="dir.srcdir" value="${dir.buildfile}/src"/> 
+	<property name="dir.srcdir" value="${dir.buildfile}/src"/>
+	<property name="dir.libdir" value="${dir.buildfile}/lib"/>
 	<property name="jarfile" value="pcaman.jar"/>
+	
+	<!-- JavaFX libraries classpath -->
+	<path id="javafx.classpath">
+		<fileset dir="${dir.libdir}">
+			<include name="javafx-*.jar"/>
+		</fileset>
+	</path>
 	
 	<target name="create_run_jar" depends="build">
         <jar destfile="${dir.jarfile}/${jarfile}" filesetmanifest="mergewithoutmain">
@@ -35,13 +43,24 @@
 	<target name="build" depends="clean">
 		<mkdir dir="${dir.bindir}" />
 		<echo message="Compiling java files" />
-		<javac srcdir="${dir.buildfile}/" destdir="${dir.bindir}" />
+		<javac srcdir="${dir.buildfile}/" destdir="${dir.bindir}" includeantruntime="false">
+			<classpath refid="javafx.classpath"/>
+			<compilerarg value="--module-path"/>
+			<compilerarg path="${dir.libdir}"/>
+			<compilerarg value="--add-modules"/>
+			<compilerarg value="javafx.base,javafx.graphics,javafx.controls,javafx.fxml"/>
+		</javac>
 	</target>
 	
 	<!-- Run - executing the programm -->
 	
 	<target name="run" depends="build">
-		<java jar="${dir.jarfile}/${jarfile}" fork="true"/>
+		<java jar="${dir.jarfile}/${jarfile}" fork="true">
+			<jvmarg value="--module-path"/>
+			<jvmarg value="${dir.libdir}"/>
+			<jvmarg value="--add-modules"/>
+			<jvmarg value="javafx.base,javafx.graphics,javafx.controls,javafx.fxml"/>
+		</java>
 	</target>
 	
 

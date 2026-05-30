@@ -22,7 +22,17 @@ public class Image {
     String label;
     Vector data;
 
+    Image(Vector data) {
+        this.data = data;
+    }
 
+    Vector getVector() {
+        return data;
+    }
+
+    void setVector(Vector data) {
+        this.data = data;
+    }
 
     /**
      * @param pathToImage path to the dataset that we want to use
@@ -68,7 +78,7 @@ public class Image {
         int heigth = image.getHeight();
 
         //for example if image is 10x10 we have 100 pixels
-        data = new Vector(width * heigth);
+        this.data = new Vector(width * heigth);
 
         // to obtain a vector with all the coposante represanting a pixel of image
         for (int y = 0; y < heigth; y++) {
@@ -84,6 +94,8 @@ public class Image {
 
             }
         }
+
+
 
         return data;
 
@@ -157,6 +169,52 @@ public class Image {
 
     }
 
+    public static void centeredVectorToImage(Vector imgVectorized, String pathToSave) throws IOException {
+        int dimension = Math.toIntExact(Math.round(Math.sqrt(imgVectorized.getDimension())));
+
+        BufferedImage image = new BufferedImage(
+                dimension,
+                dimension,
+                BufferedImage.TYPE_BYTE_GRAY
+        );
+
+        double min = imgVectorized.get(0);
+        double max = imgVectorized.get(0);
+
+        for (int i = 0; i < imgVectorized.getDimension(); i++) {
+            double value = imgVectorized.get(i);
+
+            if (value < min) {
+                min = value;
+            }
+
+            if (value > max) {
+                max = value;
+            }
+        }
+
+        for (int y = 0; y < dimension; y++) {
+            for (int x = 0; x < dimension; x++) {
+                int index = y * dimension + x;
+
+                double value = imgVectorized.get(index);
+
+                int grey;
+
+                if (max == min) {
+                    grey = 0;
+                } else {
+                    grey = (int) Math.round(255 * (value - min) / (max - min));
+                }
+
+                int rgb = (grey << 16) | (grey << 8) | grey;
+                image.setRGB(x, y, rgb);
+            }
+        }
+
+        ImageIO.write(image, "jpg", new File(pathToSave));
+    }
+
     /**
      * Converts an image to 64x64 grayscale PNG format
      * and saves it using the convention: person_XXX/img_YY.png
@@ -166,7 +224,7 @@ public class Image {
      * @param imageNum    image number (e.g. 3 → "03")
      * @return the converted and saved image file
      */
-    private static final String BASE_DIR = "./Celeba_HQ_facial_identity_dataset/train";
+    private static final String BASE_DIR = "../data_filtred/test";  // Base directory for converted images
 
     public static File convertAndSave(String inputPath, int personneId, int imageNum) throws IOException {
 
@@ -222,5 +280,20 @@ public class Image {
         if (!isOkay) {
             System.out.println("Test non passé");
         }
+    }
+
+    Vector changingBaseImage(Matrix changeOfBasis) {
+
+
+        Matrix matrixReduction = new Matrix(changeOfBasis.getNbRows(), 1);
+
+        //change of basis
+        matrixReduction = changeOfBasis.multiply(data.VectorToMatrix());
+
+        data = matrixReduction.MatrixToVector();
+
+
+
+        return data;
     }
 }

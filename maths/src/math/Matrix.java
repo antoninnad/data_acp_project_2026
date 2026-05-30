@@ -1,16 +1,12 @@
 package math;
 
 import math.exception.DimensionMismatchException;
-
 import math.exception.NoDataException;
 import math.exception.NullArgumentException;
 import math.exception.OutOfRangeException;
-import math.linear.Array2DRowRealMatrix;
-import math.linear.BlockRealMatrix;
+import math.linear.EigenDecomposition;
 import math.linear.MatrixUtils;
 import math.linear.RealMatrix;
-import math.Vector;
-import math.linear.EigenDecomposition;
 
 
 
@@ -71,7 +67,7 @@ public class Matrix {
      * @return matrix matrix attribut of this object
      */
     public RealMatrix getRealMatrix() {
-    	return this.getRealMatrix();
+    	return this.matrix;
     }
 	
     
@@ -85,7 +81,7 @@ public class Matrix {
     public Matrix multiply(Matrix m) throws DimensionMismatchException {
     	return new Matrix(this.matrix.multiply(m.getRealMatrix()));
     }
-    
+
     
     /**
      * Computes the transpose matrix of this object
@@ -226,8 +222,72 @@ public class Matrix {
     public void setColumn(int i, double[] column) throws OutOfRangeException {
     	this.matrix.setColumn(i, column);
     }
+
+
+	/**
+	 * Calculate the covariate matrix
+	 *
+	 * @param Matrix containing centered images (dimension = nxp where n>p)
+	 * @return covariate matrix (dimension = pxp)
+	 * */
+	public Matrix covariateMatrix() {
+		//calculate the transposed matrix
+		Matrix transposedMatrix = this.transpose();
+		//calculate the covariate matrix by multiplying imagesMatrix with its transposed matrix
+		covariateMatrix = transposedMatrix.multiply(this);
+		return covariateMatrix;
+	}	
     
     
+    public void normColumns() {
+    	normColumns(0,getNbColumns()-1);
+    }
+
+	public void normColumns(int start, int end) {
+    	for (int i=start; i<end; i++) {
+    		setColumn(i, getColumn(i).normalise());
+    	}
+    }
+    
+    public void addColumns(Matrix m) throws DimensionMismatchException {
+    	
+    	if (m.getNbRows() != this.getNbRows()){
+    		throw new DimensionMismatchException(m.getNbRows(),  this.getNbRows());
+    	}
+    	
+    	RealMatrix extendedMatrix = matrix.createMatrix(this.getNbRows(), this.getNbColumns()+m.getNbColumns());
+    	extendedMatrix.setSubMatrix(this.matrix.getData(), 0, 0);
+    	extendedMatrix.setSubMatrix(m.getRealMatrix().getData(), 0, this.getNbColumns());
+    	this.matrix = extendedMatrix;
+    }
+    
+    public void addRows(Matrix m) throws DimensionMismatchException {
+    	
+    	if (m.getNbColumns() != this.getNbColumns()){
+    		throw new DimensionMismatchException(m.getNbColumns(),  this.getNbColumns());
+    	}
+    	
+    	RealMatrix extendedMatrix = matrix.createMatrix(this.getNbRows()+m.getNbRows(), this.getNbColumns());
+    	extendedMatrix.setSubMatrix(this.matrix.getData(), 0, 0);
+    	extendedMatrix.setSubMatrix(m.getRealMatrix().getData(), this.getNbRows(), 0);
+    	this.matrix = extendedMatrix;
+    }
+    
+    
+    public Matrix getSubRows(int start, int end) {
+    	return new Matrix(matrix.getSubMatrix(start, end, 0, this.getNbColumns()-1));
+    }
+    
+    public Matrix getSubColumns(int start, int end) {
+    	return new Matrix(matrix.getSubMatrix(0,  this.getNbColumns()-1, start, end));
+    }
+    
+    
+    public Matrix subMatrixFirstColumns(int colLimit) {
+    	return this.getSubColumn(0, colLimit);
+    }
+
+	
     /**
      * Converts a Matrix to a String
      * @return A String object containing the printed Matrix
@@ -264,9 +324,28 @@ public class Matrix {
     	
     	
     }
-    
-    
-    
+
+    /**
+     * Matrix to Vector
+     * @return a vector dimension n
+     */
+    public Vector MatrixToVector() {
+
+        if (getNbColumns() != 1) {
+            throw new RuntimeException("Matrix shold be nx1 to be transform to a vector");
+        }
+
+        Vector result = new Vector(getNbRows());
+
+        for (int i = 0; i < getNbRows(); i++) {
+            result.set(i, getRealMatrix().getEntry(i, 0));
+        }
+
+        return result;
+    }
+
+
+
 }
 
 
