@@ -24,6 +24,7 @@ public class PCA {
     private Matrix eigenfaces; // eigenfaces of the database
 	private Vector eigenvalues; // Necessary if we want to plot the eigenvalue graph "dynamically"
 	private List<Image> images;  // List of all the images considered
+	private Matrix cov;
 	private final static String sourceDir = "";
     private final static String filename = ".PCAsave";
     private final static double eigensumThreshold = 0.8;
@@ -96,6 +97,7 @@ public class PCA {
 			//saveToFile();
     		
     	}
+	}
 
 
 	
@@ -278,52 +280,50 @@ public class PCA {
 	 * Loads the informations regarding the PCA to avoid recalculating too often
 	 * @param filename is the name of the file where the informations are saved
 	 */
-	public void loadFromFile() {
-		try (Scanner scanner = new Scanner(new BufferedReader(new FileReader(filename)))) {
-			if (scanner.hasNextInt()) {
-				//Load numberOfKeptAxes (int)
-                this.numberOfKeptAxes = scanner.nextInt();
-			}
-
-            //Load dimension of vector mean face and the values
-            if (scanner.hasNextInt()) {
-                 int meanFaceDim = scanner.nextInt();
-                 this.meanFace = new Vector(meanFaceDim);
-                 for (int i = 0; i < meanFaceDim; i++) {
-                     this.meanFace.set(i, scanner.nextDouble());
-                 }
-             }
-
-             //Load facesCoordinates matrix
-             if (scanner.hasNextInt()) {
-                 int rowsOfFaces = scanner.nextInt();
-                 int colsOfFaces = scanner.nextInt();
-                 this.projectedFaces = new Matrix(rowsOfFaces, colsOfFaces);
-                 for (int i = 0; i < rowsOfFaces; i++) {
-                     for (int j = 0; j < colsOfFaces; j++) {
-                         this.projectedFaces.set(i, j, scanner.nextDouble());
-                     }
-                 }
-             }
-
-             //Load eigenfaces
-             if (scanner.hasNextInt()) {
-                 int rowsOfEigenfaces = scanner.nextInt();
-                 int colsOfEigenfaces = scanner.nextInt();
-                 this.eigenfaces = new Matrix(rowsOfEigenfaces, colsOfEigenfaces);
-                 for (int i = 0; i < rowsOfEigenfaces; i++) {
-                     for (int j = 0; j < colsOfEigenfaces; j++) {
-                         this.eigenfaces.set(i, j, scanner.nextDouble());
-                     }
-                 }
-             }
-
-             System.out.println("The informations concerning the PCA are successfully loaded from " + filename);
-
-		} catch (IOException e) {
-			System.err.println("Error while trying to load the informations" + e.getMessage());
+	public void loadFromFile() throws IOException {
+		Scanner scanner = new Scanner(new BufferedReader(new FileReader(filename)));
+		if (scanner.hasNextInt()) {
+			//Load numberOfKeptAxes (int)
+			this.numberOfKeptAxes = scanner.nextInt();
 		}
+
+		//Load dimension of vector mean face and the values
+		if (scanner.hasNextInt()) {
+			 int meanFaceDim = scanner.nextInt();
+			 this.meanFace = new Vector(meanFaceDim);
+			 for (int i = 0; i < meanFaceDim; i++) {
+				 this.meanFace.set(i, scanner.nextDouble());
+			 }
+		 }
+
+		 //Load facesCoordinates matrix
+		 if (scanner.hasNextInt()) {
+			 int rowsOfFaces = scanner.nextInt();
+			 int colsOfFaces = scanner.nextInt();
+			 this.projectedFaces = new Matrix(rowsOfFaces, colsOfFaces);
+			 for (int i = 0; i < rowsOfFaces; i++) {
+				 for (int j = 0; j < colsOfFaces; j++) {
+					 this.projectedFaces.set(i, j, scanner.nextDouble());
+				 }
+			 }
+		 }
+
+		 //Load eigenfaces
+		 if (scanner.hasNextInt()) {
+			 int rowsOfEigenfaces = scanner.nextInt();
+			 int colsOfEigenfaces = scanner.nextInt();
+			 this.eigenfaces = new Matrix(rowsOfEigenfaces, colsOfEigenfaces);
+			 for (int i = 0; i < rowsOfEigenfaces; i++) {
+				 for (int j = 0; j < colsOfEigenfaces; j++) {
+					 this.eigenfaces.set(i, j, scanner.nextDouble());
+				 }
+			 }
+		 }
+
+		 System.out.println("The informations concerning the PCA are successfully loaded from " + filename);
+
 	}
+
 
 	
 
