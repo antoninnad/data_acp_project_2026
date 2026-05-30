@@ -223,9 +223,20 @@ public class Matrix {
     	this.matrix.setColumn(i, column);
     }
 
+
+	/**
+	 * Calculate the covariate matrix
+	 *
+	 * @param Matrix containing centered images (dimension = nxp where n>p)
+	 * @return covariate matrix (dimension = pxp)
+	 * */
 	public Matrix covariateMatrix() {
-    	return this.transpose().multiply(this);
-    }
+		//calculate the transposed matrix
+		Matrix transposedMatrix = this.transpose();
+		//calculate the covariate matrix by multiplying imagesMatrix with its transposed matrix
+		covariateMatrix = transposedMatrix.multiply(this);
+		return covariateMatrix;
+	}	
     
     
     public void normColumns() {
