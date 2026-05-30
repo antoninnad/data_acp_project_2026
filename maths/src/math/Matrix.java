@@ -284,7 +284,7 @@ public class Matrix {
     
     
     public Matrix subMatrixFirstColumns(int colLimit) {
-    	return this.getSubColumn(0, colLimit);
+    	return this.getSubColumns(0, colLimit);
     }
 
 	
