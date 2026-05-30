@@ -234,8 +234,7 @@ public class Matrix {
 		//calculate the transposed matrix
 		Matrix transposedMatrix = this.transpose();
 		//calculate the covariate matrix by multiplying imagesMatrix with its transposed matrix
-		covariateMatrix = transposedMatrix.multiply(this);
-		return covariateMatrix;
+		return transposedMatrix.multiply(this);
 	}	
     
     
