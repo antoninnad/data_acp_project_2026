@@ -226,28 +226,42 @@ public class Matrix {
 
 	/**
 	 * Calculate the covariate matrix
-	 *
 	 * @param Matrix containing centered images (dimension = nxp where n>p)
 	 * @return covariate matrix (dimension = pxp)
 	 * */
 	public Matrix covariateMatrix() {
-		//calculate the transposed matrix
+		// Computes the transposed matrix
 		Matrix transposedMatrix = this.transpose();
-		//calculate the covariate matrix by multiplying imagesMatrix with its transposed matrix
+		// Computes the covariate matrix by multiplying imagesMatrix with its transposed matrix
 		return transposedMatrix.multiply(this);
 	}	
     
-    
+    /**
+	 * Norms the columns of the Matrix (of RealMatrix) to 1
+	 * */
     public void normColumns() {
     	normColumns(0,getNbColumns()-1);
     }
 
+	/**
+	 * Norms the given columns of the Matrix (of RealMatrix) to 1
+	 * @param start Column where to start norming
+	 * @param end Column where to stop norming
+	 * */
 	public void normColumns(int start, int end) {
     	for (int i=start; i<end; i++) {
     		setColumn(i, getColumn(i).normalise());
     	}
     }
-    
+
+	/**
+	 * Concantenates a Matrix to the right of this Matrix.
+	 * @param m Matrix to concatenate to the right
+	 * @result matrix (RealMatrix) now contains the columns of m
+	 * @throws DimensionMismatchException
+	 * if the number of rows of the two matrices are different, conatenation
+	 * is impossible.
+	 * */
     public void addColumns(Matrix m) throws DimensionMismatchException {
     	
     	if (m.getNbRows() != this.getNbRows()){
@@ -259,7 +273,15 @@ public class Matrix {
     	extendedMatrix.setSubMatrix(m.getRealMatrix().getData(), 0, this.getNbColumns());
     	this.matrix = extendedMatrix;
     }
-    
+
+	/**
+	 * Concantenates a Matrix to the bottom of this Matrix.
+	 * @param m Matrix to concatenate to the bottom
+	 * @result matrix (RealMatrix) now contains the rows of m
+	 * @throws DimensionMismatchException
+	 * if the number of columns of the two matrices are different, conatenation
+	 * is impossible.
+	 * */
     public void addRows(Matrix m) throws DimensionMismatchException {
     	
     	if (m.getNbColumns() != this.getNbColumns()){
@@ -272,16 +294,41 @@ public class Matrix {
     	this.matrix = extendedMatrix;
     }
     
-    
+    /**
+	 * Creates a submatrix containing the rows a this matrix whose index are
+	 * in the range given by the parameter.
+	 * @param start Index (from 0) from which we start copying rows
+	 * @param start Index (from 0) at which we stop copying rows
+	 * @return A Matrix object containing the given rows is returned
+	 * @throws DimensionMismatchException
+	 * if the indexes are incompatible, an error is thrown
+	 * */
     public Matrix getSubRows(int start, int end) {
     	return new Matrix(matrix.getSubMatrix(start, end, 0, this.getNbColumns()-1));
     }
-    
+
+	
+	/**
+	 * Creates a submatrix containing the columns a this matrix whose index are
+	 * in the range given by the parameter.
+	 * @param start Index (from 0) from which we start copying columns
+	 * @param start Index (included, from 0) at which we stop copying columns
+	 * @return A Matrix object containing the given columns is returned
+	 * @throws DimensionMismatchException
+	 * if the indexes are incompatible, an error is thrown
+	 * */
     public Matrix getSubColumns(int start, int end) {
     	return new Matrix(matrix.getSubMatrix(0,  this.getNbColumns()-1, start, end));
     }
     
-    
+
+	/**
+	 * Creates a submatrix containing the columns a this matrix up to a given index
+	 * @param start Index (included, from 0) at which we stop copying columns
+	 * @return A Matrix object containing the given columns is returned
+	 * @throws DimensionMismatchException
+	 * if the indexes are incompatible, an error is thrown
+	 * */
     public Matrix subMatrixFirstColumns(int colLimit) {
     	return this.getSubColumns(0, colLimit);
     }
@@ -309,7 +356,7 @@ public class Matrix {
 
 
     /**
-     * Matrix to Vector
+     * Converts a column Matrix (dimensions being (n,1) to a Vector object
      * @return a vector dimension n
      */
     public Vector MatrixToVector() {
@@ -321,7 +368,7 @@ public class Matrix {
         Vector result = new Vector(getNbRows());
 
         for (int i = 0; i < getNbRows(); i++) {
-            result.set(i, getRealMatrix().getEntry(i, 0));
+            result.set(i, get(i, 0));
         }
 
         return result;
