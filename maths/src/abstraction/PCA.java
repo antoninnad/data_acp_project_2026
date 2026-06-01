@@ -9,35 +9,48 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+
 //reading of the save file
 import java.util.Scanner;
 
 import math.Matrix;
 import math.Vector;
 
+
+/**
+ * PCA is the class responsible for setting up the "work environment" we will use to compare images.
+ * It does this by simply making the Principal Component Analysis and switching the database's images' coordinates
+ * to the new basis. Its attributes represent the necessary data for further image analysis (espacially eigen elements
+ * and image coordinates). It will read the database itself and save the computed data in a file to spare the cost
+ * of recalculating everything on launch of the application.
+ */
 public class PCA {
-	private int maxNbOfKeptAxes = 0;  // maximum number of axes having been computed (use for calculus optimisation)
-	private int numberOfKeptAxes; // number of axes that are relevant for the PCA
-	private Vector meanFace; //mean face found based on our database
-	private Matrix facesCoordinates; // coordinates (pixel value) of every face : must remain untouched after centring 
-	private Matrix projectedFaces; // Coordinates of the images in the eigenspace
-    private Matrix eigenfaces; // eigenfaces of the database
-	private Vector eigenvalues; // Necessary if we want to plot the eigenvalue graph "dynamically"
-	private List<Image> images;  // List of all the images considered
+	private int maxNbOfKeptAxes = 0;  // Maximum number of axes having been computed (use for calculus optimisation)
+	private int numberOfKeptAxes;     // Number of axes to be considered in the image analysis process
+	private Vector meanFace;          // Mean face of every image in the database
+	private Matrix facesCoordinates;  // Coordinates (pixel value) of every known face (Note : must remain untouched after centring)
+	private Matrix projectedFaces;    // Coordinates of the images in the considered eigenspace
+    private Matrix eigenfaces;        // Eigenfaces of the database
+	private Vector eigenvalues;       // Necessary if we want to plot the eigenvalue graph "dynamically"
+	private List<Image> images;       // List of all the images considered
 	private Matrix cov;
-	private final static String sourceDir = "";
-    private final static String filename = ".PCAsave";
-    private final static double eigensumThreshold = 0.8;
+	private final static String sourceDir = "";           // Path to the database (see the README.db for more information on the database's structure
+    private final static String filename = ".PCAsave";    // Path to the save file
+    private final static double eigensumThreshold = 0.8;  // Minimum percentage of variance desired in the eigenspace
 
 
+	/**
+     * Initialises all the PCA attributes, doing all the necessary work to change the images' basis.
+	 * It also saves the computed data to a file.
+     * @throws IOException
+     */
 	public PCA() throws IOException {
     	
-    	// Reading the data from the database (either file or folder)
-    	
-    	readDB(); // Maybe only if we manually change the number of axes
-    	int index = 0;  // number of columns
+    	/****** Reading the data from the database ******/
+    	readDB();
+    	int index = 0;  // Index of the colunms
 		
-		// Fetching all the pixels of the image and storing them in a Matrix
+		/****** Fetching all the pixels of the images and storing them in a Matrix ******/
    		facesCoordinates = new Matrix(images.get(0).getPixels().getDimension(), images.size());    	
 		for (Image img : images) {
 			facesCoordinates.setColumn(index, img.getPixels());
@@ -45,80 +58,99 @@ public class PCA {
 		}
 
 
-		// Computing or reading the PCA data (eigen elements) depending on the save file's existence
+		/****** Computing or reading the PCA data (eigen elements) depending on the save file's existence ******/
     	try {
     		
-    		// Trying to load data from the save file if it exists
+    		/*--- Trying to load data from the save file if it exists ---*/
     		loadFromFile();
 
     	} catch (IOException file_error) {
     		
-    		// If it doesn't exist, compute the data (the new images base)
+    		/*--- If the save file cannot be read, we compute the PCA data (the new images basis) ---*/
 
-    		// Centring all the images (faceCoordinates) with the mean face
-    		this.centreImages();
+    		// Centring all the images (facesCoordinates) with the mean face
+    		centreImages();
 			
     		// Creating the .jpg images associated to centred faces
     		Image.centeredVectorToImage(meanFace, "meanface.jpg");
     		for (int i=0; i<facesCoordinates.getNbColumns(); i++) {
-    			Image.centeredVectorToImage(facesCoordinates.getColumn(i), i+".jpg");
+    			Image.centeredVectorToImage(facesCoordinates.getColumn(i), "centred_face_"+i+".jpg");
     		}
 
     		
-    		// Calculating the covariance matrix
+    		// Computing the covariance matrix
     		cov = facesCoordinates.covariateMatrix();
     		
     		// Fetching the eigenvalues and computing the necessary number of axes (depending on eigensumThreshold)
     		eigenvalues = cov.getEigenvalues();
-    		computeNumberOfKeptAxes();  // Default value on application start
+    		computeNumberOfKeptAxes();           // Default value on application start
     		maxNbOfKeptAxes = numberOfKeptAxes;  // Setting the maximum number of axes considered up to now
     		
     		
     		
-    		// Calculating the eigenfaces : eigenvectors of the original matrix (the centred faceCoordinates)
-    		// We only keep the number of eigenvectors previously computed
-    		eigenfaces = facesCoordinates.multiply(cov.getEigenvectors().subMatrixFirstColumns(getNumberOfKeptAxes()-1)); // Computing initial eigenvectors
+    		/****** Calculating the eigenfaces : eigenvectors of the centred facesCoordinates ******/
+			
+    		// Computing the original eigenvectors
+    		eigenfaces = facesCoordinates.multiply(cov.getEigenvectors().subMatrixFirstColumns(getNumberOfKeptAxes()-1)); // We only keep the number of eigenvectors previously computed
     		
 			// Creating the .jpg eigenfaces
 			for (int i=0; i<eigenfaces.getNbColumns(); i++) {
 	    		Image.centeredVectorToImage(eigenfaces.getColumn(i), "eigen"+i+".jpg");
 	    	}
-    		
-    		eigenfaces.normColumns(); // norms to one
-    		
+
+			// Norming the eigenvectors
+    		eigenfaces.normColumns();
     		
     		// Projecting every face in the new eigenspace
     		for (int i=0; i<facesCoordinates.getNbRows(); i++) {
-    			projectedFaces = eigenfaces.transpose().multiply(facesCoordinates); // [nbOfKeptAxes x nbImages]
+    			projectedFaces = eigenfaces.transpose().multiply(facesCoordinates);
     		}
     		
     		
-    		// Saving the computed data to the files : should be done on app termination
+    		// Saving the computed data to the files
 			//saveToFile();
     		
     	}
 	}
 
 
-	
+	/**
+     * Getter for the numberOfKeptAxes attribute
+     * @return Returns the number of considered axes of the new basis
+     */
 	public int getNumberOfKeptAxes() {
-    	return numberOfKeptAxes;
+    	return this.numberOfKeptAxes;
     }
 
+	/**
+     * Getter for the projectedFaces attribute
+     * @return Returns the matrix containing the coordinate of the faces in the new basis
+     */
 	public Matrix getProjectedFacesOnKeptAxes() {
-    	return projectedFaces;
+    	return this.projectedFaces;
     }
 
+	/**
+     * Getter for the facesCoordinates attribute
+     * @return Returns the matrix containing the coordinate of the faces in the original basis
+     */
 	public Matrix getFacesCordonates() {
 		return this.facesCoordinates;
 	}
 
+	/**
+     * Getter for the meanFace attribute
+     * @return Returns the mean face of the database
+     */
 	public Vector getMeanFace() {
-		return meanFace;
+		return this.meanFace;
 	}
 	
 	
-	// TODO
+	/**
+     * Computes the number axes needed to reache at least the eigensumThreshold
+     * @return Returns the mean face of the database
+     */
 	public void computeNumberOfKeptAxes() {
     	numberOfKeptAxes = 2;    	
     }
@@ -131,10 +163,10 @@ public class PCA {
      */
     public void readDB() throws IOException {
     	
-    	File root = new File(sourceDir);
-		File[] personneFolders = root.listFiles(File::isDirectory);
+    	File root = new File(sourceDir);		// Parent directory of the database
+		File[] personneFolders = root.listFiles(File::isDirectory);   // Folders containing the images
 
-		// Checking the directory isn't empty
+		// Checking that the directory isn't empty
 		if (personneFolders == null) {
 			throw new IOException("cannot access '"+sourceDir+"': No such file or directory");
 		}
@@ -174,9 +206,7 @@ public class PCA {
 
 	/**
 	 * Centres images with the mean face
-	 *
-	 * @param list of images (resized and greyscale)
-	 * @return matrix of centred images
+	 * @result The meanFace vector has been substracted from every column vector of facesCoordinates
 	 * */
 	public void centreImages() throws IOException {
 		
@@ -191,6 +221,11 @@ public class PCA {
 	}
 	
 
+	/**
+	 * Centres a given vector with the mean face
+	 * @param v The vector to center
+	 * @result The meanFace vector has been substracted from v
+	 * */
 	public Vector centredVector(Vector v) {
 
 		if (meanFace == null) {
@@ -202,9 +237,7 @@ public class PCA {
 
 
 	/** Calculate the mean face based on a list of Images, by averaging pixels by pixels
-	 *
-	 * @param listImages list of images that has been treated before(resized and greyscale)
-	 * @return vector representing the mean face
+	 * @result meanFace is now initialised and represents the mean face
 	 * */
 	public void computeMeanFace() {
 
@@ -232,7 +265,6 @@ public class PCA {
 	
 	/**
 	 * Saves the informations regarding the PCA to avoid recalculating too often
-	 * @param filename is the name of the file where the informations are saved
 	 */
 	public void saveToFile() {
 		try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
@@ -278,7 +310,6 @@ public class PCA {
 
 	/**
 	 * Loads the informations regarding the PCA to avoid recalculating too often
-	 * @param filename is the name of the file where the informations are saved
 	 */
 	public void loadFromFile() throws IOException {
 		Scanner scanner = new Scanner(new BufferedReader(new FileReader(filename)));
