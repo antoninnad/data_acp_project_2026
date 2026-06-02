@@ -122,7 +122,7 @@ public class Vector {
 	public Vector addition(Vector v) {
 
 		if (this.data.length != v.data.length) {
-			//throw();
+			throw new IllegalArgumentException("Vector dimensions must match for addition. Expected " + this.dimension + ", but got " + v.getDimension() + ".");
 		}
 
 		Vector diffVector = new Vector(this.data.length);
@@ -167,7 +167,7 @@ public class Vector {
 	public double dotProduct(Vector v) {
 		
 		if (this.data.length != v.data.length) {
-			//throw();
+			throw new IllegalArgumentException("Vector dimensions must match. Expected " + this.dimension + ", but got " + v.getDimension() + ".");
 		}
 		
 		double result = 0 ;

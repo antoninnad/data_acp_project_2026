@@ -7,7 +7,7 @@ import math.Vector;
 
 public class TestPca {
 
-    private static final String TRAINING_DIR = "./data_filtred/train";
+    private static final String TRAINING_DIR = "../data_filtred/train";
     private static final int MAX_IMAGES_FOR_TEST = 20;
 
     public static void main(String[] args) throws IOException {

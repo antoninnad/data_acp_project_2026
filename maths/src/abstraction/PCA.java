@@ -37,7 +37,7 @@ public class PCA {
 	private final String sourceDir;
 	private final int maxImagesToLoad;
 	private final boolean writeDebugImages;
-	private final static String defaultSourceDir = "./data_filtred/train";
+	private final static String defaultSourceDir = "../data_filtred/train";
     private final static String filename = ".PCAsave";
     private final static double eigensumThreshold = 0.8;
 
