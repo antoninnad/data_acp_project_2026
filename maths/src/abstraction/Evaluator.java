@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class Evaluator {
 
-    private static final String TRAINING_DIR = "../data_filtred/train";
+    private static final String TRAINING_DIR = "./data_filtred/train";
     private static final int MAX_IMAGES_FOR_TEST = 20;
     private PCA pca;
 

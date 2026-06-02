@@ -37,7 +37,7 @@ public class PCA {
 	private final String sourceDir;
 	private final int maxImagesToLoad;
 	private final boolean writeDebugImages;
-	private final static String defaultSourceDir = "../data_filtred/train";
+	private final static String defaultSourceDir = "./data_filtred/train";
     private final static String filename = ".PCAsave";
     private final static double eigensumThreshold = 0.8;
 
@@ -84,23 +84,27 @@ public class PCA {
     		}
 
     		/*--- Trying to load data from the save file if it exists ---*/
+    		System.out.println("The file already exists... Loading");
     		loadFromFile();
 
     	} catch (IOException file_error) {
     		
     		/*--- If the save file cannot be read, we compute the PCA data (the new images basis) ---*/
 
+    		System.out.println("Computing because the file is missing");
     		// Centring all the images (facesCoordinates) with the mean face
     		centreImages();
 			
     		// Creating the .jpg images associated to centred faces
 			if (writeDebugImages) {
+				System.out.println("Writing the images");
 	    		Image.centeredVectorToImage(meanFace, "meanface.jpg");
 	    		for (int i=0; i<facesCoordinates.getNbColumns(); i++) {
 	    			Image.centeredVectorToImage(facesCoordinates.getColumn(i), i+".jpg");
 	    		}
 			}
     		// Computing the covariance matrix
+			System.out.println("Calculation of the covariance matrix");
     		cov = facesCoordinates.covariateMatrix();
     		
     		// Fetching the eigenvalues and computing the necessary number of axes (depending on eigensumThreshold)
@@ -113,7 +117,8 @@ public class PCA {
     		/****** Calculating the eigenfaces : eigenvectors of the centred facesCoordinates ******/
 
     		// Computing the original eigenvectors
-    		eigenfaces = facesCoordinates.multiply(cov.getEigenvectors().subMatrixFirstColumns(getNumberOfKeptAxes()-1)); // We only keep the number of eigenvectors previously computed
+    		System.out.println("Calculation of eigenvalues ​​and eigenvectors");
+    		eigenfaces = facesCoordinates.multiply(cov.getEigenvectors().subMatrixFirstColumns(getNumberOfKeptAxes())); // We only keep the number of eigenvectors previously computed
     		
 			// Creating the .jpg eigenfaces
 			if (writeDebugImages) {
@@ -131,7 +136,7 @@ public class PCA {
     		
     		
     		// Saving the computed data to the files : should be done on app termination
-			//saveToFile();
+			saveToFile();
     		
     	}
 	}
@@ -326,31 +331,26 @@ public class PCA {
 	 */
 	public void saveToFile() {
 		try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
-			//Save the number of axes kept
+			// 1. Save the number of axes kept
 			writer.println(this.numberOfKeptAxes);
-			writer.println();
 
-			//Save the mean face
+			// 2. Save the mean face 
 			writer.println(this.meanFace.getDimension());
 			for (int i = 0 ; i < this.meanFace.getDimension() ; i++) {
-				writer.println(this.meanFace.get(i) + " ");
-
+				writer.print(this.meanFace.get(i) + " "); 
 			}
 			writer.println();
 
-			//Save the coordinates of the faces
-			writer.println();
+			// 3. Save the coordinates of the faces (projectedFaces)
 			writer.println(this.projectedFaces.getNbRows() + " " + this.projectedFaces.getNbColumns());
 			for (int i = 0 ; i < this.projectedFaces.getNbRows(); i++ ) {
 				for (int j = 0; j < this.projectedFaces.getNbColumns(); j++) {
-					writer.println(this.projectedFaces.get(i,j) + " ");
+					writer.print(this.projectedFaces.get(i,j) + " ");
 				}
 				writer.println();
 			}
 
-			writer.println();
-
-			//Save the eigenfaces
+			// 4. Save the eigenfaces
 			writer.println(this.eigenfaces.getNbRows() + " " + this.eigenfaces.getNbColumns());
             for (int i = 0; i < this.eigenfaces.getNbRows(); i++) {
                 for (int j = 0; j < this.eigenfaces.getNbColumns(); j++) {
@@ -358,10 +358,10 @@ public class PCA {
                 }
                 writer.println();
             }
-            writer.println();
-			System.out.println("The informations concerning the PCA have been to " + filename);
+            
+			System.out.println("The informations concerning the PCA have been saved to " + filename);
 		} catch (IOException e) {
-			System.err.println("Error while trying to save the informations" + e.getMessage());
+			System.err.println("Error while trying to save the informations: " + e.getMessage());
 		}
 
 	}
@@ -370,47 +370,55 @@ public class PCA {
 	 * Loads the informations regarding the PCA to avoid recalculating too often
 	 */
 	public void loadFromFile() throws IOException {
-		Scanner scanner = new Scanner(new BufferedReader(new FileReader(filename)));
-		if (scanner.hasNextInt()) {
-			//Load numberOfKeptAxes (int)
-			this.numberOfKeptAxes = scanner.nextInt();
+		File file = new File(filename);
+		if (!file.exists()) {
+			throw new FileNotFoundException("Save file not found: " + filename);
 		}
-
-		//Load dimension of vector mean face and the values
-		if (scanner.hasNextInt()) {
-			 int meanFaceDim = scanner.nextInt();
-			 this.meanFace = new Vector(meanFaceDim);
-			 for (int i = 0; i < meanFaceDim; i++) {
-				 this.meanFace.set(i, scanner.nextDouble());
-			 }
-		 }
-
-		 //Load facesCoordinates matrix
-		 if (scanner.hasNextInt()) {
-			 int rowsOfFaces = scanner.nextInt();
-			 int colsOfFaces = scanner.nextInt();
-			 this.projectedFaces = new Matrix(rowsOfFaces, colsOfFaces);
-			 for (int i = 0; i < rowsOfFaces; i++) {
-				 for (int j = 0; j < colsOfFaces; j++) {
-					 this.projectedFaces.set(i, j, scanner.nextDouble());
+		try (Scanner scanner = new Scanner(new BufferedReader(new FileReader(file)))) {
+			// To avoid trouble recognizing the . or ,
+			scanner.useLocale(Locale.US); 
+			 
+			if (scanner.hasNextInt()) {
+				//Load numberOfKeptAxes (int)
+				this.numberOfKeptAxes = scanner.nextInt();
+			}
+	
+			//Load dimension of vector mean face and the values
+			if (scanner.hasNextInt()) {
+				 int meanFaceDim = scanner.nextInt();
+				 this.meanFace = new Vector(meanFaceDim);
+				 for (int i = 0; i < meanFaceDim; i++) {
+					 this.meanFace.set(i, scanner.nextDouble());
 				 }
 			 }
-		 }
-
-		 //Load eigenfaces
-		 if (scanner.hasNextInt()) {
-			 int rowsOfEigenfaces = scanner.nextInt();
-			 int colsOfEigenfaces = scanner.nextInt();
-			 this.eigenfaces = new Matrix(rowsOfEigenfaces, colsOfEigenfaces);
-			 for (int i = 0; i < rowsOfEigenfaces; i++) {
-				 for (int j = 0; j < colsOfEigenfaces; j++) {
-					 this.eigenfaces.set(i, j, scanner.nextDouble());
+	
+			 //Load facesCoordinates matrix
+			 if (scanner.hasNextInt()) {
+				 int rowsOfFaces = scanner.nextInt();
+				 int colsOfFaces = scanner.nextInt();
+				 this.projectedFaces = new Matrix(rowsOfFaces, colsOfFaces);
+				 for (int i = 0; i < rowsOfFaces; i++) {
+					 for (int j = 0; j < colsOfFaces; j++) {
+						 this.projectedFaces.set(i, j, scanner.nextDouble());
+					 }
 				 }
 			 }
+	
+			 //Load eigenfaces
+			 if (scanner.hasNextInt()) {
+				 int rowsOfEigenfaces = scanner.nextInt();
+				 int colsOfEigenfaces = scanner.nextInt();
+				 this.eigenfaces = new Matrix(rowsOfEigenfaces, colsOfEigenfaces);
+				 for (int i = 0; i < rowsOfEigenfaces; i++) {
+					 for (int j = 0; j < colsOfEigenfaces; j++) {
+						 this.eigenfaces.set(i, j, scanner.nextDouble());
+					 }
+				 }
+			 }
+
+			 System.out.println("The informations concerning the PCA are successfully loaded from " + filename);
+			 
 		 }
-
-		 System.out.println("The informations concerning the PCA are successfully loaded from " + filename);
-
 	}
 
 	public static void main(String[] args) throws FileNotFoundException {
@@ -423,6 +431,5 @@ public class PCA {
 			 
 
 	 }
-	
 
 }
