@@ -138,20 +138,38 @@ public class PCA {
 
 
 	
+	/**
+     * Getter for the numberOfKeptAxes attribute
+     * @return Returns the number of considered axes of the new basis
+     */
 	public int getNumberOfKeptAxes() {
-    	return numberOfKeptAxes;
+    	return this.numberOfKeptAxes;
     }
+	
 
+	/**
+     * Getter for the projectedFaces attribute
+     * @return Returns the matrix containing the coordinate of the faces in the new basis
+     */
 	public Matrix getProjectedFacesOnKeptAxes() {
-    	return projectedFaces;
+    	return projectedFaces.getSubRows(0, numberOfKeptAxes-1);
     }
+	
 
-	public Matrix getFacesCordonates() {
+	/**
+     * Getter for the facesCoordinates attribute
+     * @return Returns the matrix containing the coordinate of the faces in the original basis
+     */
+	public Matrix getFacesCoordinates() {
 		return this.facesCoordinates;
 	}
-
+	
+	/**
+     * Getter for the meanFace attribute
+     * @return Returns the mean face of the database
+     */
 	public Vector getMeanFace() {
-		return meanFace;
+		return this.meanFace;
 	}
 
 
