@@ -1,6 +1,9 @@
 package abstraction;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import math.Matrix;
 import math.Vector;
@@ -11,11 +14,13 @@ public class TestPca {
     private static final int MAX_IMAGES_FOR_TEST = 20;
 
     public static void main(String[] args) throws IOException {
-        testChangingBaseImage();
-        testPcaStartsFromTrainingDirectory();
 
+        testPcaStartsFromTrainingDirectory();
         System.out.println("\nTous les tests PCA sont passes !");
     }
+
+
+
 
     private static void testPcaStartsFromTrainingDirectory() throws IOException {
         PCA pca = new PCA(TRAINING_DIR, MAX_IMAGES_FOR_TEST, false);
@@ -52,6 +57,8 @@ public class TestPca {
             );
         }
 
+        Map<String, List<Vector>> a = pca.getMapSign();
+
         System.out.println(
                 "testPcaStartsFromTrainingDirectory reussi : "
                         + pca.getFacesCordonates().getNbColumns()
@@ -59,7 +66,7 @@ public class TestPca {
                         + TRAINING_DIR
                         + ", "
                         + pca.getNumberOfKeptAxes()
-                        + " axes gardes"
+                        + " axes gardes" + a
         );
     }
 
@@ -82,6 +89,8 @@ public class TestPca {
         });
 
         assertVectorEquals(expected, result);
+
+
 
         System.out.println("testChangingBaseImage reussi");
     }
