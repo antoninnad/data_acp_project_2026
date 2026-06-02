@@ -14,6 +14,8 @@
 # Maven
 target/
 .mvn/wrapper/maven-wrapper.jar
+/pom.xml
+/maths/pom.xml
 
 # IntelliJ IDEA
 .idea/
@@ -43,3 +45,5 @@ replay_pid*
 Celeba_HQ_facial_identity_dataset/
 ./maths/bin
 ./bin
+./maths/.classpath
+./maths/.project
