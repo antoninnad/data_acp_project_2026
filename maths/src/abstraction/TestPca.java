@@ -25,7 +25,7 @@ public class TestPca {
     private static void testPcaStartsFromTrainingDirectory() throws IOException {
         PCA pca = new PCA(TRAINING_DIR, MAX_IMAGES_FOR_TEST, false);
 
-        if (pca.getFacesCordonates().getNbColumns() == 0) {
+        if (pca.getFacesCoordinates().getNbColumns() == 0) {
             throw new AssertionError("Aucune image chargee depuis " + TRAINING_DIR);
         }
 
@@ -48,10 +48,10 @@ public class TestPca {
             );
         }
 
-        if (projectedFaces.getNbColumns() != pca.getFacesCordonates().getNbColumns()) {
+        if (projectedFaces.getNbColumns() != pca.getFacesCoordinates().getNbColumns()) {
             throw new AssertionError(
                     "Nombre d'images projetees incorrect : attendu "
-                            + pca.getFacesCordonates().getNbColumns()
+                            + pca.getFacesCoordinates().getNbColumns()
                             + ", obtenu "
                             + projectedFaces.getNbColumns()
             );
@@ -61,7 +61,7 @@ public class TestPca {
 
         System.out.println(
                 "testPcaStartsFromTrainingDirectory reussi : "
-                        + pca.getFacesCordonates().getNbColumns()
+                        + pca.getFacesCoordinates().getNbColumns()
                         + " images chargees depuis "
                         + TRAINING_DIR
                         + ", "
