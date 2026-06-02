@@ -292,8 +292,6 @@ public class Image {
 
         data = matrixReduction.matrixToVector();
 
-
-
         return data;
     }
 }
