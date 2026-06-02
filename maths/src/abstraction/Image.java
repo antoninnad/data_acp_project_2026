@@ -290,7 +290,7 @@ public class Image {
         //change of basis
         matrixReduction = changeOfBasis.multiply(data.VectorToMatrix());
 
-        data = matrixReduction.MatrixToVector();
+        data = matrixReduction.matrixToVector();
 
 
 

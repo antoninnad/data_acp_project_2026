@@ -13,6 +13,8 @@ import math.linear.RealMatrix;
 /**
  * The class Matrix represents a mathematical real matrix and allows to perform some basic operation on this object.
  * Matrix actually is implemented as a translator between our application and the Appache Common Maths (ACM) library.
+ * It also allows to access the eigen decomposition, if it exists, of this matrix. However, the eigen decomposition
+ * is computed (only once) only if asked for.
  */
 public class Matrix {
 	
@@ -134,7 +136,7 @@ public class Matrix {
      * @param j Column of the element to return
      * @return A double, the (i,j) coefficient of the matrix.
      */
-    public double get(int i, int j) {
+    public double get(int i, int j) throws OutOfRangeException {
     	return (this.matrix.getEntry(i, j));
     }
     
@@ -145,7 +147,7 @@ public class Matrix {
      * @param j Column of the element to return
      * @param value Value to insert at the position (i,j) of the matrix.
      */
-    public void set(int i, int j, double value) {
+    public void set(int i, int j, double value) throws OutOfRangeException {
     	this.matrix.setEntry(i, j, value);
     	diagonalisation = null;
     }
@@ -226,29 +228,43 @@ public class Matrix {
 
 	/**
 	 * Calculate the covariate matrix
-	 *
 	 * @param Matrix containing centered images (dimension = nxp where n>p)
 	 * @return covariate matrix (dimension = pxp)
 	 * */
-	public Matrix covariateMatrix() {
-		//calculate the transposed matrix
+	public Matrix covariateMatrix() throws DimensionMismatchException {
+		// Computes the transposed matrix
 		Matrix transposedMatrix = this.transpose();
-		//calculate the covariate matrix by multiplying imagesMatrix with its transposed matrix
+		// Computes the covariate matrix by multiplying imagesMatrix with its transposed matrix
 		return transposedMatrix.multiply(this);
 
 	}	
     
-    
+    /**
+	 * Norms the columns of the Matrix (of RealMatrix) to 1
+	 * */
     public void normColumns() {
     	normColumns(0,getNbColumns()-1);
     }
 
-	public void normColumns(int start, int end) {
+	/**
+	 * Norms the given columns of the Matrix (of RealMatrix) to 1
+	 * @param start Column where to start norming
+	 * @param end Column where to stop norming
+	 * */
+	public void normColumns(int start, int end) throws OutOfRangeException {
     	for (int i=start; i<end; i++) {
     		setColumn(i, getColumn(i).normalise());
     	}
     }
-    
+
+	/**
+	 * Concantenates a Matrix to the right of this Matrix.
+	 * @param m Matrix to concatenate to the right
+	 * @result matrix (RealMatrix) now contains the columns of m
+	 * @throws DimensionMismatchException
+	 * if the number of rows of the two matrices are different, conatenation
+	 * is impossible.
+	 * */
     public void addColumns(Matrix m) throws DimensionMismatchException {
     	
     	if (m.getNbRows() != this.getNbRows()){
@@ -260,7 +276,15 @@ public class Matrix {
     	extendedMatrix.setSubMatrix(m.getRealMatrix().getData(), 0, this.getNbColumns());
     	this.matrix = extendedMatrix;
     }
-    
+
+	/**
+	 * Concantenates a Matrix to the bottom of this Matrix.
+	 * @param m Matrix to concatenate to the bottom
+	 * @result matrix (RealMatrix) now contains the rows of m
+	 * @throws DimensionMismatchException
+	 * if the number of columns of the two matrices are different, conatenation
+	 * is impossible.
+	 * */
     public void addRows(Matrix m) throws DimensionMismatchException {
     	
     	if (m.getNbColumns() != this.getNbColumns()){
@@ -273,17 +297,42 @@ public class Matrix {
     	this.matrix = extendedMatrix;
     }
     
-    
-    public Matrix getSubRows(int start, int end) {
+    /**
+	 * Creates a submatrix containing the rows a this matrix whose index are
+	 * in the range given by the parameter.
+	 * @param start Index (from 0) from which we start copying rows
+	 * @param start Index (from 0) at which we stop copying rows
+	 * @return A Matrix object containing the given rows is returned
+	 * @throws DimensionMismatchException
+	 * if the indexes are incompatible, an error is thrown
+	 * */
+    public Matrix getSubRows(int start, int end) throws OutOfRangeException {
     	return new Matrix(matrix.getSubMatrix(start, end, 0, this.getNbColumns()-1));
     }
-    
-    public Matrix getSubColumns(int start, int end) {
+
+	
+	/**
+	 * Creates a submatrix containing the columns a this matrix whose index are
+	 * in the range given by the parameter.
+	 * @param start Index (from 0) from which we start copying columns
+	 * @param start Index (included, from 0) at which we stop copying columns
+	 * @return A Matrix object containing the given columns is returned
+	 * @throws DimensionMismatchException
+	 * if the indexes are incompatible, an error is thrown
+	 * */
+    public Matrix getSubColumns(int start, int end) throws OutOfRangeException {
     	return new Matrix(matrix.getSubMatrix(0,  this.getNbColumns()-1, start, end));
     }
     
-    
-    public Matrix subMatrixFirstColumns(int colLimit) {
+
+	/**
+	 * Creates a submatrix containing the columns a this matrix up to a given index
+	 * @param start Index (included, from 0) at which we stop copying columns
+	 * @return A Matrix object containing the given columns is returned
+	 * @throws DimensionMismatchException
+	 * if the indexes are incompatible, an error is thrown
+	 * */
+    public Matrix subMatrixFirstColumns(int colLimit) throws OutOfRangeException {
     	return this.getSubColumns(0, colLimit);
     }
 
@@ -310,10 +359,10 @@ public class Matrix {
 
 
     /**
-     * Matrix to Vector
+     * Converts a column Matrix (dimensions being (n,1) to a Vector object
      * @return a vector dimension n
      */
-    public Vector MatrixToVector() {
+    public Vector matrixToVector() {
 
         if (getNbColumns() != 1) {
             throw new RuntimeException("Matrix shold be nx1 to be transform to a vector");
@@ -322,7 +371,7 @@ public class Matrix {
         Vector result = new Vector(getNbRows());
 
         for (int i = 0; i < getNbRows(); i++) {
-            result.set(i, getRealMatrix().getEntry(i, 0));
+            result.set(i, get(i, 0));
         }
 
         return result;

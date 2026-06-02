@@ -80,6 +80,7 @@ public class Vector {
 	
 	/**
 	 * Normalises each value of the vector using the norm
+	 * @return A copy of this vector, normalised to one
 	 */
 	public Vector normalise() {
 		double vectorNorm = this.norm();
@@ -178,7 +179,7 @@ public class Vector {
 	
 	/**
 	 * Returns a vector
-	 * @return a display of a vector
+	 * @return Displays a vector on the standard output
 	 */
 	@Override
     public String toString() {
