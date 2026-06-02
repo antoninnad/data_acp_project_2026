@@ -321,7 +321,7 @@ public class Matrix {
 	 * if the indexes are incompatible, an error is thrown
 	 * */
     public Matrix getSubColumns(int start, int end) throws OutOfRangeException {
-    	return new Matrix(matrix.getSubMatrix(0,  this.getNbColumns()-1, start, end));
+    	return new Matrix(matrix.getSubMatrix(0,  this.getNbRows()-1, start, end));
     }
     
 
