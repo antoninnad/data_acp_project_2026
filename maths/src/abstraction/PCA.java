@@ -177,9 +177,15 @@ public class PCA {
 	 * to get the map with key it's the label of the personne and the values are the projection of the person with the matrix
 	 * @return
 	 */
-	public Map<String, Vector> getMapSign() {
+	public Map<String, List<Vector>> getMapSign() {
 
-		Map<String, Vector> resultat = new HashMap<String,Vector>();
+		Map<String, List<Vector>> resultat = new LinkedHashMap<>();
+
+		for (int i = 0;i != projectedFaces.getNbColumns();i++) {
+			String label = images.get(i).getLabel();
+			resultat.computeIfAbsent(label, key -> new ArrayList<>()).add(projectedFaces.getColumn(i));
+		}
+
 
 		return  resultat;
 
