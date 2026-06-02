@@ -163,8 +163,6 @@ public class PCA {
 
 		Map<String, Vector> resultat = new HashMap<String,Vector>();
 
-
-
 		return  resultat;
 
 	}
