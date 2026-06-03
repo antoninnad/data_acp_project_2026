@@ -36,10 +36,10 @@ public class PCA {
 	private Matrix cov;
 	private final String sourceDir;
 	private final int maxImagesToLoad;
-	private final boolean writeDebugImages;
-	private final static String defaultSourceDir = "./data_filtred/train";
-    private final static String filename = ".PCAsave";
-    private final static double eigensumThreshold = 0.8;
+	private final boolean writeDebugImages;		// Indicates whether or not to generate images (meanface, eigenfaces, reconstructions...)
+	private final static String defaultSourceDir = "./data_filtred/train";	// Path to the database (see the README.db for more information on the database's structure
+    private final static String filename = ".PCAsave";						// Path to the save file
+    private final static double eigensumThreshold = 0.8;					// Minimum percentage of variance desired in the eigenspace 
 
 
 	/**
