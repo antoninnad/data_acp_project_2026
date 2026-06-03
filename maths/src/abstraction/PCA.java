@@ -31,143 +31,372 @@ public class PCA {
 	private Vector meanFace;          // Mean face of every image in the database
 	private Matrix facesCoordinates;  // Coordinates (pixel value) of every known face (Note : must remain untouched after centring)
 	private Matrix projectedFaces;    // Coordinates of the images in the considered eigenspace
-    private Matrix eigenfaces;        // Eigenfaces of the database
+	private Matrix eigenfaces;        // Eigenfaces of the database
 	private List<Image> images;       // List of all the images considered
 	private Matrix cov;
+	private Vector pixelMeans;
+	private Vector pixelStandardDeviations;
 	private final String sourceDir;
-	private final int maxImagesToLoad;
+	private final int maxIndividualsToLoad;
 	private final boolean writeDebugImages;
-	private final static String defaultSourceDir = "../data_filtred/train";
-    private final static String filename = ".PCAsave";
-    private final static double eigensumThreshold = 0.8;
+	private final static String defaultSourceDir = "data_filtred/train";
+	private final static String filename = ".PCAsave";
+	private final static double keptInertiaThreshold = 0.85;
+	private final static int maxPowerIterations = 100;
+	private final static double powerIterationTolerance = 1e-6;
+	private final static int skippedLeadingAxes = 3;
 
 
 	/**
-     * Initialises all the PCA attributes, doing all the necessary work to change the images' basis.
+	 * Initialises all the PCA attributes, doing all the necessary work to change the images' basis.
 	 * It also saves the computed data to a file.
-     * @throws IOException
-     */
+	 * @throws IOException
+	 */
 	public PCA() throws IOException {
-		this(defaultSourceDir);
+		this(resolveExistingDirectory(defaultSourceDir));
 	}
 
 	public PCA(String sourceDir) throws IOException {
 		this(sourceDir, 0, true);
 	}
 
-	public PCA(String sourceDir, int maxImagesToLoad) throws IOException {
-		this(sourceDir, maxImagesToLoad, true);
+	public PCA(String sourceDir, int maxIndividualsToLoad) throws IOException {
+		this(sourceDir, maxIndividualsToLoad, true);
 	}
 
-	public PCA(String sourceDir, int maxImagesToLoad, boolean writeDebugImages) throws IOException {
+	public PCA(String sourceDir, int maxIndividualsToLoad, boolean writeDebugImages) throws IOException {
 		this.sourceDir = sourceDir;
-		this.maxImagesToLoad = maxImagesToLoad;
+		this.maxIndividualsToLoad = maxIndividualsToLoad;
 		this.writeDebugImages = writeDebugImages;
 
-    	/****** Reading the data from the database ******/
-    	readDB();
-    	int index = 0;  // Index of the columns
-		
+		/****** Reading the data from the database ******/
+		reportProgress("lecture du dossier source : " + sourceDir);
+		readDB();
+		reportProgress(images.size() + " images trouvees");
+
 		/****** Fetching all the pixels of the images and storing them in a Matrix ******/
-   		facesCoordinates = new Matrix(images.get(0).getPixels().getDimension(), images.size());    	
-		for (Image img : images) {
+		reportProgress("chargement des pixels");
+		Vector firstImagePixels = images.get(0).getPixels();
+		facesCoordinates = new Matrix(firstImagePixels.getDimension(), images.size());
+		facesCoordinates.setColumn(0, firstImagePixels);
+		reportItemProgress("images chargees", 1, images.size());
+
+		for (int index = 1; index < images.size(); index++) {
+			Image img = images.get(index);
 			facesCoordinates.setColumn(index, img.getPixels());
-			index += 1;
+			reportItemProgress("images chargees", index + 1, images.size());
 		}
+		reportProgress("pixels charges dans la matrice " + facesCoordinates.getNbRows() + "x" + facesCoordinates.getNbColumns());
+		reportProgress("centrage-reduction des pixels sur le train");
+		standardizeTrainingPixels();
 
 
 
 		/****** Computing or reading the PCA data (eigen elements) depending on the save file's existence ******/
-    	try {
-    		if (maxImagesToLoad > 0) {
-    			throw new IOException("Partial PCA test run: skip save file");
-    		}
-
-    		/*--- Trying to load data from the save file if it exists ---*/
-    		loadFromFile();
-
-    	} catch (IOException file_error) {
-    		
-    		/*--- If the save file cannot be read, we compute the PCA data (the new images basis) ---*/
-
-    		// Centring all the images (facesCoordinates) with the mean face
-    		centreImages();
-			
-    		// Creating the .jpg images associated to centred faces
-			if (writeDebugImages) {
-	    		Image.centeredVectorToImage(meanFace, "meanface.jpg");
-	    		for (int i=0; i<facesCoordinates.getNbColumns(); i++) {
-	    			Image.centeredVectorToImage(facesCoordinates.getColumn(i), i+".jpg");
-	    		}
+		try {
+			if (maxIndividualsToLoad > 0) {
+				throw new IOException("Partial PCA test run: skip save file");
 			}
-    		// Computing the covariance matrix
-    		cov = facesCoordinates.covariateMatrix();
-    		
-    		// Fetching the eigenvalues and computing the necessary number of axes (depending on eigensumThreshold)
-    		Vector eigenvalues = cov.getEigenvalues();
-    		computeNumberOfKeptAxes();           // Default value on application start
-    		maxNbOfKeptAxes = numberOfKeptAxes;  // Setting the maximum number of axes considered up to now
-    		
-    		
-    		
-    		/****** Calculating the eigenfaces : eigenvectors of the centred facesCoordinates ******/
 
-    		// Computing the original eigenvectors
-    		eigenfaces = facesCoordinates.multiply(cov.getEigenvectors().subMatrixFirstColumns(getNumberOfKeptAxes()-1)); // We only keep the number of eigenvectors previously computed
-    		
+			/*--- Trying to load data from the save file if it exists ---*/
+			reportProgress("chargement des donnees ACP depuis " + filename);
+			loadFromFile();
+
+		} catch (IOException file_error) {
+
+			/*--- If the save file cannot be read, we compute the PCA data (the new images basis) ---*/
+			reportProgress("calcul ACP complet");
+
+			// Centring all the images (facesCoordinates) with the mean face
+			centreImages();
+
+			// Creating the .jpg images associated to centred faces
+			if (writeDebugImages) {
+				Image.centeredVectorToImage(meanFace, "meanface.jpg");
+				for (int i=0; i<facesCoordinates.getNbColumns(); i++) {
+					Image.centeredVectorToImage(facesCoordinates.getColumn(i), i+".jpg");
+				}
+			}
+			// Computing the covariance matrix
+			reportProgress("calcul de la matrice de covariance");
+			cov = facesCoordinates.covariateMatrixWithProgress(128);
+
+			// Fetching the dominant eigenvectors and computing the necessary number of axes.
+			reportProgress("calcul iteratif des meilleurs axes propres");
+			EigenSelection eigenSelection = computeDominantEigenvectors();
+			numberOfKeptAxes = eigenSelection.eigenvectors.getNbColumns();
+			maxNbOfKeptAxes = numberOfKeptAxes;  // Setting the maximum number of axes considered up to now
+			reportProgress(numberOfKeptAxes + " axes gardes");
+
+
+
+			/****** Calculating the eigenfaces : eigenvectors of the centred facesCoordinates ******/
+
+			// Computing the original eigenvectors
+			reportProgress("calcul des eigenfaces");
+			eigenfaces = facesCoordinates.multiply(eigenSelection.eigenvectors); // We only keep the number of eigenvectors previously computed
+
 			// Creating the .jpg eigenfaces
 			if (writeDebugImages) {
 				for (int i=0; i<eigenfaces.getNbColumns(); i++) {
-		    		Image.centeredVectorToImage(eigenfaces.getColumn(i), "eigen"+i+".jpg");
-		    	}
+					Image.centeredVectorToImage(eigenfaces.getColumn(i), "eigen"+i+".jpg");
+				}
 			}
-    		
-			// Norming the eigenvectors
-    		eigenfaces.normColumns();
 
-    		
-    		// Projecting every face in the new eigenspace
+			// Norming the eigenvectors
+			reportProgress("normalisation des eigenfaces");
+			eigenfaces.normColumns();
+
+
+			// Projecting every face in the new eigenspace
+			reportProgress("projection des images d'entrainement");
 			projectedFaces = eigenfaces.transpose().multiply(facesCoordinates); // [nbOfKeptAxes x nbImages]
-    		
-    		
-    		// Saving the computed data to the files : should be done on app termination
+			reportProgress("ACP terminee");
+
+
+			// Saving the computed data to the files : should be done on app termination
 			//saveToFile();
-    		
-    	}
+
+		}
+	}
+
+	private void reportProgress(String message) {
+		System.out.println("[ACP] " + message);
+	}
+
+	private void reportItemProgress(String label, int done, int total) {
+		if (done == total || done % 100 == 0) {
+			System.out.println("[ACP] " + label + " : " + done + "/" + total);
+		}
+	}
+
+	private EigenSelection computeDominantEigenvectors() {
+		int dimension = cov.getNbColumns();
+		int maxAxes = Math.min(100, dimension);
+		double totalEnergy = Math.max(cov.trace(), 0.0);
+		Matrix eigenvectors = new Matrix(dimension, maxAxes);
+		double[][] keptVectors = new double[maxAxes][];
+		double cumulativeEnergy = 0.0;
+		int keptAxes = 0;
+		Random random = new Random(0);
+
+		if (totalEnergy == 0.0) {
+			eigenvectors.setColumn(0, new Vector(new double[dimension]));
+			return new EigenSelection(eigenvectors.subMatrixFirstColumns(0));
+		}
+
+		for (int axis = 0; axis < maxAxes; axis++) {
+			double[] vector = randomUnitVector(dimension, random);
+			orthogonalize(vector, keptVectors, keptAxes);
+			normalise(vector);
+			int iterations = 0;
+
+			for (; iterations < maxPowerIterations; iterations++) {
+				double[] nextVector = cov.getRealMatrix().operate(vector);
+				orthogonalize(nextVector, keptVectors, keptAxes);
+
+				double norm = norm(nextVector);
+				if (norm == 0.0) {
+					break;
+				}
+
+				scale(nextVector, 1.0 / norm);
+				double alignment = Math.abs(dot(vector, nextVector));
+				vector = nextVector;
+
+				if (1.0 - alignment < powerIterationTolerance) {
+					break;
+				}
+
+				if ((iterations + 1) % 10 == 0) {
+					double progress = 100.0 * (axis + (iterations + 1.0) / maxPowerIterations) / maxAxes;
+					System.out.printf(Locale.US,
+							"[ACP] axes propres : %.2f%% (axe %d/%d, iteration %d/%d)%n",
+							progress,
+							axis + 1,
+							maxAxes,
+							iterations + 1,
+							maxPowerIterations
+					);
+				}
+			}
+
+			double eigenvalue = dot(vector, cov.getRealMatrix().operate(vector));
+			if (eigenvalue <= 0.0) {
+				break;
+			}
+
+			keptVectors[keptAxes] = vector;
+			eigenvectors.setColumn(keptAxes, new Vector(vector));
+			keptAxes++;
+			cumulativeEnergy += eigenvalue;
+
+			double energyPercent = 100.0 * cumulativeEnergy / totalEnergy;
+			double progress = 100.0 * keptAxes / maxAxes;
+			System.out.printf(Locale.US,
+					"[ACP] axes propres : %.2f%% (axe %d/%d calcule, energie %.2f%%, iterations %d)%n",
+					progress,
+					keptAxes,
+					maxAxes,
+					energyPercent,
+					iterations + 1
+			);
+
+			if (cumulativeEnergy / totalEnergy >= keptInertiaThreshold) {
+				break;
+			}
+		}
+
+		return new EigenSelection(eigenvectors.subMatrixFirstColumns(Math.max(0, keptAxes - 1)));
+	}
+
+	private double[] randomUnitVector(int dimension, Random random) {
+		double[] vector = new double[dimension];
+
+		for (int i = 0; i < vector.length; i++) {
+			vector[i] = random.nextDouble() - 0.5;
+		}
+
+		normalise(vector);
+		return vector;
+	}
+
+	private void orthogonalize(double[] vector, double[][] keptVectors, int keptAxes) {
+		for (int axis = 0; axis < keptAxes; axis++) {
+			double projection = dot(vector, keptVectors[axis]);
+
+			for (int i = 0; i < vector.length; i++) {
+				vector[i] -= projection * keptVectors[axis][i];
+			}
+		}
+	}
+
+	private void normalise(double[] vector) {
+		double norm = norm(vector);
+
+		if (norm > 0.0) {
+			scale(vector, 1.0 / norm);
+		}
+	}
+
+	private void scale(double[] vector, double scale) {
+		for (int i = 0; i < vector.length; i++) {
+			vector[i] *= scale;
+		}
+	}
+
+	private void standardizeTrainingPixels() {
+		int rows = facesCoordinates.getNbRows();
+		int columns = facesCoordinates.getNbColumns();
+		double[] means = new double[rows];
+		double[] variances = new double[rows];
+
+		for (int row = 0; row < rows; row++) {
+			double sum = 0.0;
+
+			for (int column = 0; column < columns; column++) {
+				sum += facesCoordinates.get(row, column);
+			}
+
+			means[row] = sum / columns;
+		}
+
+		for (int row = 0; row < rows; row++) {
+			double variance = 0.0;
+
+			for (int column = 0; column < columns; column++) {
+				double centeredValue = facesCoordinates.get(row, column) - means[row];
+				variance += centeredValue * centeredValue;
+			}
+
+			variances[row] = Math.sqrt(variance / columns);
+		}
+
+		pixelMeans = new Vector(means);
+		pixelStandardDeviations = new Vector(variances);
+
+		for (int column = 0; column < columns; column++) {
+			facesCoordinates.setColumn(column, standardizeWithTrainingPixels(facesCoordinates.getColumn(column)));
+			reportItemProgress("images standardisees", column + 1, columns);
+		}
+	}
+
+	private Vector standardizeWithTrainingPixels(Vector pixels) {
+		if (pixelMeans == null || pixelStandardDeviations == null) {
+			throw new RuntimeException("Pixel standardization statistics are not initialized");
+		}
+
+		double[] standardizedData = new double[pixels.getDimension()];
+
+		for (int i = 0; i < pixels.getDimension(); i++) {
+			double standardDeviation = pixelStandardDeviations.get(i);
+			standardizedData[i] = standardDeviation == 0.0
+					? 0.0
+					: (pixels.get(i) - pixelMeans.get(i)) / standardDeviation;
+		}
+
+		return new Vector(standardizedData);
+	}
+
+	private double norm(double[] vector) {
+		return Math.sqrt(dot(vector, vector));
+	}
+
+	private double dot(double[] first, double[] second) {
+		double result = 0.0;
+
+		for (int i = 0; i < first.length; i++) {
+			result += first[i] * second[i];
+		}
+
+		return result;
+	}
+
+	private static class EigenSelection {
+		private final Matrix eigenvectors;
+
+		private EigenSelection(Matrix eigenvectors) {
+			this.eigenvectors = eigenvectors;
+		}
 	}
 
 
-	
+
 	/**
-     * Getter for the numberOfKeptAxes attribute
-     * @return Returns the number of considered axes of the new basis
-     */
+	 * Getter for the numberOfKeptAxes attribute
+	 * @return Returns the number of considered axes of the new basis
+	 */
 	public int getNumberOfKeptAxes() {
-    	return this.numberOfKeptAxes;
-    }
-	
+		return Math.max(0, this.numberOfKeptAxes - getSkippedLeadingAxes());
+	}
+
 
 	/**
-     * Getter for the projectedFaces attribute
-     * @return Returns the matrix containing the coordinate of the faces in the new basis
-     */
+	 * Getter for the projectedFaces attribute
+	 * @return Returns the matrix containing the coordinate of the faces in the new basis
+	 */
 	public Matrix getProjectedFacesOnKeptAxes() {
-    	return projectedFaces.getSubRows(0, numberOfKeptAxes-1);
-    }
-	
+		int firstKeptAxis = getSkippedLeadingAxes();
+		return projectedFaces.getSubRows(firstKeptAxis, numberOfKeptAxes-1);
+	}
+
+	private int getSkippedLeadingAxes() {
+		return Math.min(skippedLeadingAxes, Math.max(0, numberOfKeptAxes - 1));
+	}
+
 
 	/**
-     * Getter for the facesCoordinates attribute
-     * @return Returns the matrix containing the coordinate of the faces in the original basis
-     */
+	 * Getter for the facesCoordinates attribute
+	 * @return Returns the matrix containing the coordinate of the faces in the original basis
+	 */
 	public Matrix getFacesCoordinates() {
 		return this.facesCoordinates;
 	}
-	
+
 	/**
-     * Getter for the meanFace attribute
-     * @return Returns the mean face of the database
-     */
+	 * Getter for the meanFace attribute
+	 * @return Returns the mean face of the database
+	 */
 	public Vector getMeanFace() {
 		return this.meanFace;
 	}
@@ -180,10 +409,11 @@ public class PCA {
 	public Map<String, List<Vector>> getMapSign() {
 
 		Map<String, List<Vector>> resultat = new LinkedHashMap<>();
+		Matrix projectedFacesOnKeptAxes = getProjectedFacesOnKeptAxes();
 
-		for (int i = 0;i != projectedFaces.getNbColumns();i++) {
+		for (int i = 0;i != projectedFacesOnKeptAxes.getNbColumns();i++) {
 			String label = images.get(i).getLabel();
-			resultat.computeIfAbsent(label, key -> new ArrayList<>()).add(projectedFaces.getColumn(i));
+			resultat.computeIfAbsent(label, key -> new ArrayList<>()).add(projectedFacesOnKeptAxes.getColumn(i));
 		}
 
 
@@ -191,36 +421,106 @@ public class PCA {
 
 	}
 
-	
+
 	/**
-     * Getter for the eigenvalues attribute
-     * @return Returns a vector containing the eigenvalues ordered in
-     * ascending order
-     */
+	 * Getter for the eigenvalues attribute
+	 * @return Returns a vector containing the eigenvalues ordered in
+	 * ascending order
+	 */
 	public Vector getEigenValues() {
 		return this.cov.getEigenvalues();
 	}
-	
-	
+
+
 	/**
-     * Computes the number axes needed to reach at least the eigensumThreshold
-     * @return Returns the mean face of the database
-     */
+	 * Computes the number axes needed to reach at least the kept inertia threshold.
+	 * @return Returns the mean face of the database
+	 */
 	public void computeNumberOfKeptAxes() {
-    	numberOfKeptAxes = 2;
-    }
+		computeNumberOfKeptAxes(cov.getEigenvalues());
+	}
+
+	/**
+	 * Computes the number axes needed to reach at least the kept inertia threshold.
+	 * @param eigenvalues
+	 */
+
+	public void computeNumberOfKeptAxes(Vector eigenvalues) {
+		int maxAxes = Math.min(50, eigenvalues.getDimension());
+		double total = 0.0;
+
+		for (int i = 0; i < eigenvalues.getDimension(); i++) {
+			total += Math.max(0.0, eigenvalues.get(i));
+		}
+
+		if (total == 0.0) {
+			numberOfKeptAxes = Math.min(1, maxAxes);
+			return;
+		}
+
+		Integer[] indexes = getEigenvalueIndexesByDescendingValue(eigenvalues);
+		double cumulative = 0.0;
+		numberOfKeptAxes = maxAxes;
+
+		for (int i = 0; i < maxAxes; i++) {
+			cumulative += Math.max(0.0, eigenvalues.get(indexes[i]));
+
+			if (cumulative / total >= keptInertiaThreshold) {
+				numberOfKeptAxes = i + 1;
+				return;
+			}
+		}
+	}
+
+	/**
+	 * to get The eigneis values sorted
+	 * @param eigenvectors
+	 * @param eigenvalues
+	 * @return
+	 */
+
+	private Matrix getSortedEigenvectors(Matrix eigenvectors, Vector eigenvalues) {
+		Integer[] indexes = getEigenvalueIndexesByDescendingValue(eigenvalues);
+		Matrix sortedEigenvectors = new Matrix(eigenvectors.getNbRows(), numberOfKeptAxes);
+
+		for (int i = 0; i < numberOfKeptAxes; i++) {
+			sortedEigenvectors.setColumn(i, eigenvectors.getColumn(indexes[i]));
+		}
+
+		return sortedEigenvectors;
+	}
+
+	/**
+	 * to sort the eigeinvalues
+	 * @param eigenvalues
+	 * @return
+	 */
+
+	private Integer[] getEigenvalueIndexesByDescendingValue(Vector eigenvalues) {
+		Integer[] indexes = new Integer[eigenvalues.getDimension()];
+
+		for (int i = 0; i < indexes.length; i++) {
+			indexes[i] = i;
+		}
+
+		Arrays.sort(indexes, (first, second) ->
+				Double.compare(eigenvalues.get(second), eigenvalues.get(first))
+		);
+
+		return indexes;
+	}
 
 	public void setMeanFace(Vector meanFace) {
 		this.meanFace = meanFace;
 	}
 
 	/**
-     * Reads every image from the database and adds them to images list attribute
-     * @throws IOException
-     */
-    public void readDB() throws IOException {
-    	
-    	File root = new File(sourceDir);		// Parent directory of the database
+	 * Reads every image from the database and adds them to images list attribute
+	 * @throws IOException
+	 */
+	public void readDB() throws IOException {
+
+		File root = new File(sourceDir);		// Parent directory of the database
 		File[] personneFolders = root.listFiles(File::isDirectory);   // Folders containing the images
 
 		// Checking that the directory isn't empty
@@ -229,11 +529,18 @@ public class PCA {
 		}
 
 		images = new ArrayList<>(); // Creating a new object to contain the images
-		Arrays.sort(personneFolders, Comparator.comparing(File::getName));
+		Arrays.sort(personneFolders, Comparator.comparingInt(this::personFolderSortValue).thenComparing(File::getName));
+
+		int loadedIndividuals = 0;
 
 		// Looking in every folder
 		for (File personneFolder : personneFolders) {
-			if (!personneFolder.getName().matches("\\d+")) {
+			if (maxIndividualsToLoad > 0 && loadedIndividuals >= maxIndividualsToLoad) {
+				break;
+			}
+
+			String label = Image.labelFromFolderName(personneFolder.getName());
+			if (label.isEmpty()) {
 				continue;
 			}
 			// Fetching images from a sub-folder
@@ -241,23 +548,26 @@ public class PCA {
 					f.getName().endsWith(".jpg") || f.getName().endsWith(".png")
 			);
 
-			if (files == null) continue;
+			if (files == null || files.length == 0) continue;
 			Arrays.sort(files, Comparator.comparing(File::getName));
 
-			
+
 			for (int i = 0; i < files.length; i++) {
 				// Adding the image to the list
-				images.add(new Image(files[i].getAbsolutePath(), personneFolder.getName()));
-				if (maxImagesToLoad > 0 && images.size() >= maxImagesToLoad) {
-					return;
-				}
+				images.add(new Image(files[i].getAbsolutePath(), label));
 			}
+			loadedIndividuals++;
 		}
 
 		if (images.isEmpty()) {
 			throw new IOException("No images found in '" + sourceDir + "'");
 		}
-    }
+	}
+
+	private int personFolderSortValue(File folder) {
+		String label = Image.labelFromFolderName(folder.getName());
+		return label.isEmpty() ? Integer.MAX_VALUE : Integer.parseInt(label);
+	}
 
 	/**
 	 * Centres images with the mean face
@@ -266,17 +576,19 @@ public class PCA {
 	 * @return matrix of centred images
 	 * */
 	public void centreImages() throws IOException {
-		
+
 		// Computing the mean face
+		reportProgress("calcul du visage moyen");
 		this.computeMeanFace();
 		for(int i=0; i<images.size(); i++) {
 
-				//add in the matrix the new centred image
-				 facesCoordinates.setColumn(i, centredVector(facesCoordinates.getColumn(i)));
-				
+			//add in the matrix the new centred image
+			facesCoordinates.setColumn(i, centredVector(facesCoordinates.getColumn(i)));
+			reportItemProgress("images centrees", i + 1, images.size());
+
 		}
 	}
-	
+
 
 	/**
 	 * Centres a given vector with the mean face
@@ -292,34 +604,47 @@ public class PCA {
 		return v.difference(meanFace);
 	}
 
+	/**
+	 * Projects a vectorized image into the PCA eigenspace.
+	 * @param v image pixels in the original basis
+	 * @return image coordinates on the kept PCA axes
+	 */
+	public Vector projectVector(Vector v) {
+		if (eigenfaces == null) {
+			throw new RuntimeException("Eigenfaces are not initialized");
+		}
+
+		Matrix projectedVector = eigenfaces.transpose().multiply(centredVector(standardizeWithTrainingPixels(v)).VectorToMatrix());
+		return projectedVector.getSubRows(getSkippedLeadingAxes(), numberOfKeptAxes - 1).matrixToVector();
+	}
+
 
 	/** Calculate the mean face based on a list of Images, by averaging pixels by pixels
 	 * @result meanFace is now initialised and represents the mean face
 	 * */
 	public void computeMeanFace() {
-
-
-		try {
-			meanFace = new Vector(images.getFirst().getNumberOfPixel());
-			int numberImg = images.size();
-
-			// 255 * 300 * 30 at worst does not overpass the max of double in java
-			for (Image img : images) {
-				Vector add = img.getPixels();
-				meanFace = meanFace.addition(add);
-			}
-
-			//normalise by the number of image
-			meanFace = meanFace.multiplicationScalar((double) 1.0/numberImg);
-
-
-		} catch (IOException e) {
-			throw new RuntimeException("Image can be load " + e);
+		if (facesCoordinates == null) {
+			throw new RuntimeException("Faces coordinates matrix is null");
 		}
 
+		int numberImg = facesCoordinates.getNbColumns();
+		double[] meanData = new double[facesCoordinates.getNbRows()];
+
+		for (int column = 0; column < numberImg; column++) {
+			Vector imagePixels = facesCoordinates.getColumn(column);
+			for (int row = 0; row < imagePixels.getDimension(); row++) {
+				meanData[row] += imagePixels.get(row);
+			}
+		}
+
+		for (int i = 0; i < meanData.length; i++) {
+			meanData[i] /= numberImg;
+		}
+
+		meanFace = new Vector(meanData);
 	}
 
-	
+
 	/**
 	 * Saves the informations regarding the PCA to avoid recalculating too often
 	 * @param filename is the name of the file where the informations are saved
@@ -352,13 +677,13 @@ public class PCA {
 
 			//Save the eigenfaces
 			writer.println(this.eigenfaces.getNbRows() + " " + this.eigenfaces.getNbColumns());
-            for (int i = 0; i < this.eigenfaces.getNbRows(); i++) {
-                for (int j = 0; j < this.eigenfaces.getNbColumns(); j++) {
-                    writer.print(this.eigenfaces.get(i, j) + " ");
-                }
-                writer.println();
-            }
-            writer.println();
+			for (int i = 0; i < this.eigenfaces.getNbRows(); i++) {
+				for (int j = 0; j < this.eigenfaces.getNbColumns(); j++) {
+					writer.print(this.eigenfaces.get(i, j) + " ");
+				}
+				writer.println();
+			}
+			writer.println();
 			System.out.println("The informations concerning the PCA have been to " + filename);
 		} catch (IOException e) {
 			System.err.println("Error while trying to save the informations" + e.getMessage());
@@ -378,51 +703,68 @@ public class PCA {
 
 		//Load dimension of vector mean face and the values
 		if (scanner.hasNextInt()) {
-			 int meanFaceDim = scanner.nextInt();
-			 this.meanFace = new Vector(meanFaceDim);
-			 for (int i = 0; i < meanFaceDim; i++) {
-				 this.meanFace.set(i, scanner.nextDouble());
-			 }
-		 }
+			int meanFaceDim = scanner.nextInt();
+			this.meanFace = new Vector(meanFaceDim);
+			for (int i = 0; i < meanFaceDim; i++) {
+				this.meanFace.set(i, scanner.nextDouble());
+			}
+		}
 
-		 //Load facesCoordinates matrix
-		 if (scanner.hasNextInt()) {
-			 int rowsOfFaces = scanner.nextInt();
-			 int colsOfFaces = scanner.nextInt();
-			 this.projectedFaces = new Matrix(rowsOfFaces, colsOfFaces);
-			 for (int i = 0; i < rowsOfFaces; i++) {
-				 for (int j = 0; j < colsOfFaces; j++) {
-					 this.projectedFaces.set(i, j, scanner.nextDouble());
-				 }
-			 }
-		 }
+		//Load facesCoordinates matrix
+		if (scanner.hasNextInt()) {
+			int rowsOfFaces = scanner.nextInt();
+			int colsOfFaces = scanner.nextInt();
+			this.projectedFaces = new Matrix(rowsOfFaces, colsOfFaces);
+			for (int i = 0; i < rowsOfFaces; i++) {
+				for (int j = 0; j < colsOfFaces; j++) {
+					this.projectedFaces.set(i, j, scanner.nextDouble());
+				}
+			}
+		}
 
-		 //Load eigenfaces
-		 if (scanner.hasNextInt()) {
-			 int rowsOfEigenfaces = scanner.nextInt();
-			 int colsOfEigenfaces = scanner.nextInt();
-			 this.eigenfaces = new Matrix(rowsOfEigenfaces, colsOfEigenfaces);
-			 for (int i = 0; i < rowsOfEigenfaces; i++) {
-				 for (int j = 0; j < colsOfEigenfaces; j++) {
-					 this.eigenfaces.set(i, j, scanner.nextDouble());
-				 }
-			 }
-		 }
+		//Load eigenfaces
+		if (scanner.hasNextInt()) {
+			int rowsOfEigenfaces = scanner.nextInt();
+			int colsOfEigenfaces = scanner.nextInt();
+			this.eigenfaces = new Matrix(rowsOfEigenfaces, colsOfEigenfaces);
+			for (int i = 0; i < rowsOfEigenfaces; i++) {
+				for (int j = 0; j < colsOfEigenfaces; j++) {
+					this.eigenfaces.set(i, j, scanner.nextDouble());
+				}
+			}
+		}
 
-		 System.out.println("The informations concerning the PCA are successfully loaded from " + filename);
+		System.out.println("The informations concerning the PCA are successfully loaded from " + filename);
 
 	}
 
-	public static void main(String[] args) throws FileNotFoundException {
-		 try {
-			 PCA pca = new PCA();
-		 } catch (IOException e) {
-			 throw new FileNotFoundException(); 
-		 
-		 }
-			 
+	private static String resolveExistingDirectory(String path) throws IOException {
+		File fromCurrentDirectory = new File(path);
+		if (fromCurrentDirectory.isDirectory()) {
+			return fromCurrentDirectory.getPath();
+		}
 
-	 }
-	
+		File fromParentDirectory = new File("..", path);
+		if (fromParentDirectory.isDirectory()) {
+			return fromParentDirectory.getPath();
+		}
+
+		throw new IOException("cannot access '" + path + "': No such file or directory");
+	}
+
+	public static void main(String[] args) throws IOException {
+		String sourceDirectory = args.length > 0 ? args[0] : resolveExistingDirectory(defaultSourceDir);
+		PCA pca = new PCA(sourceDirectory);
+		System.out.println(
+				"ACP terminee : "
+						+ pca.getFacesCoordinates().getNbColumns()
+						+ " images chargees depuis "
+						+ sourceDirectory
+						+ ", "
+						+ pca.getNumberOfKeptAxes()
+						+ " axes gardes"
+		);
+	}
+
 
 }

@@ -2,8 +2,7 @@ package abstraction;
 
 import math.Vector;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,14 +10,15 @@ import java.util.Set;
 class Query {
 
     protected double threshold_similarity;
-    private static final double ALPHA_SURVARIANCE = 1.05;
+    private static final double ALPHA_SURVARIANCE = 1.00;
+    private final Map<List<Vector>, Double> thresholdCache = new IdentityHashMap<>();
 
     public Query(double threshold_similarity) {
         this.threshold_similarity = threshold_similarity;
     }
 
     public Query() {
-        this(1.2);
+        this(0.01);
     }
 
     /**
@@ -36,7 +36,7 @@ class Query {
         }
 
         for (int i = 0; i != a.getDimension(); i++) {
-            result +=  Math.pow((a.get(i) - b.get(i)), 2);
+            result += (a.get(i) - b.get(i))* (a.get(i) - b.get(i));
         }
 
         return result;
@@ -49,128 +49,68 @@ class Query {
      * @return the distance between vect a and b
      */
     private double distance(Vector a, Vector b) {
-        return Query.squaredNorme(a, b);
+        return cosineDistance(a, b);
     }
 
-    /**
-     * to get a threshol personnalizedForAnImage reading recherche.md to understand wy
-     * @param dataSetPersonne
-     * @return
-     */
+    private double cosineDistance(Vector a, Vector b) {
+        if (a.getDimension() != b.getDimension()) {
+            throw new DimensionVectorException("Vector does not have same dimension. ");
+        }
+
+        double dotProduct = 0.0;
+        double normA = 0.0;
+        double normB = 0.0;
+
+        for (int i = 0; i < a.getDimension(); i++) {
+            dotProduct += a.get(i) * b.get(i);
+            normA += a.get(i) * a.get(i);
+            normB += b.get(i) * b.get(i);
+        }
+
+        // to avoid division
+
+        if (normA == 0.0 || normB == 0.0) {
+            return 1.0;
+        }
+
+        return 1.0 - dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    }
 
     private double getThreshold_PersonnalizedForAnImage(List<Vector> dataSetPersonne) {
         if (dataSetPersonne == null || dataSetPersonne.isEmpty()) {
             return threshold_similarity;
         }
 
-        List<Vector> pointsSaves = new ArrayList<>(dataSetPersonne);
-        boolean isAPointDeleted;
+        Double cachedThreshold = thresholdCache.get(dataSetPersonne);
+        if (cachedThreshold != null) {
+            return cachedThreshold;
+        }
 
-        do {
+        if (dataSetPersonne.size() == 1) {
+            thresholdCache.put(dataSetPersonne, threshold_similarity);
+            return threshold_similarity;
+        }
 
-            // wa take the moy to compute the distance between all points beetween the epicentre
-            Vector epicentre = computeEpicentre(pointsSaves);
-            List<Double> distances = computeDistances(pointsSaves, epicentre);
-            double limiteTukey = computeTukeyLimit(distances);
+        double threshold = 0.0;
 
-            //calculing the outlier
-            List<Vector> pointsFiltres = new ArrayList<>();
-            for (int i = 0; i < pointsSaves.size(); i++) {
-                if (distances.get(i) <= limiteTukey) {
-                    pointsFiltres.add(pointsSaves.get(i));
+        for (int i = 0; i < dataSetPersonne.size(); i++) {
+            double nearestDistance = Double.POSITIVE_INFINITY;
+
+            for (int j = 0; j < dataSetPersonne.size(); j++) {
+                if (i != j) {
+                    nearestDistance = Math.min(
+                            nearestDistance,
+                            distance(dataSetPersonne.get(i), dataSetPersonne.get(j))
+                    );
                 }
             }
 
-            //we save the points admissible
-            isAPointDeleted = pointsFiltres.size() < pointsSaves.size();
-            if (!pointsFiltres.isEmpty()) {
-                pointsSaves = pointsFiltres;
-            }
-        } while (isAPointDeleted);
-
-        Vector epicentre = computeEpicentre(pointsSaves);
-
-        //getting the final distance between the epicentre
-        double seuilPersonnalise = 0.0;
-        for (Vector point : pointsSaves) {
-            seuilPersonnalise = Math.max(seuilPersonnalise, distance(point, epicentre));
+            threshold = Math.max(threshold, nearestDistance);
         }
 
-        return Math.max(ALPHA_SURVARIANCE * seuilPersonnalise, threshold_similarity);
-    }
-
-    /**
-     * to get the epicente
-     * @param points list of vector
-     * @return the epicenter
-     */
-
-    private Vector computeEpicentre(List<Vector> points) {
-        Vector epicentre = new Vector(points.get(0).getDimension());
-
-        for (Vector point : points) {
-            epicentre = epicentre.addition(point);
-        }
-
-        return epicentre.multiplicationScalar(1.0 / points.size());
-    }
-
-    /**
-     * to get the lis of distance between the epicenter
-     * @param points list of all Vecctor
-     * @param epicentre
-     * @return
-     */
-
-    private List<Double> computeDistances(List<Vector> points, Vector epicentre) {
-        List<Double> distances = new ArrayList<>();
-
-        for (Vector point : points) {
-            distances.add(distance(point, epicentre));
-        }
-
-        return distances;
-    }
-
-    /**
-     * get the limit of tukey see the recherche.md to understand why
-     * @param distances
-     * @return
-     */
-
-    private double computeTukeyLimit(List<Double> distances) {
-        List<Double> sortedDistances = new ArrayList<>(distances);
-        Collections.sort(sortedDistances);
-
-        double q1 = percentile(sortedDistances, 0.25);
-        double q3 = percentile(sortedDistances, 0.75);
-        double iqr = q3 - q1;
-
-        return q3 + 1.5 * iqr;
-    }
-
-    /**
-     * to get the percentil for limit of tukey
-     * @param sortedValues
-     * @param percentile
-     * @return
-     */
-
-    private double percentile(List<Double> sortedValues, double percentile) {
-        if (sortedValues.size() == 1) {
-            return sortedValues.get(0);
-        }
-
-        double index = percentile * (sortedValues.size() - 1);
-        int lowerIndex = (int) Math.floor(index);
-        int upperIndex = (int) Math.ceil(index);
-
-        if (lowerIndex == upperIndex) {
-            return sortedValues.get(lowerIndex);
-        }
-
-        double ratio = index - lowerIndex;
-        return sortedValues.get(lowerIndex) * (1.0 - ratio) + sortedValues.get(upperIndex) * ratio;
+        threshold = Math.max(ALPHA_SURVARIANCE * threshold, threshold_similarity);
+        thresholdCache.put(dataSetPersonne, threshold);
+        return threshold;
     }
 
     /**
@@ -182,32 +122,112 @@ class Query {
 
     public String findBestMatch(Vector target, Map<String, List<Vector>> dataBase) {
 
-        //recovering all keys to explore the dataset
-        String result = "";
+        String bestLabel = "";
+        double bestAcceptedDistance = Double.POSITIVE_INFINITY;
         Set<String> keys = dataBase.keySet();
-        boolean estTrouve = false;
 
-        //finding the best match with threshold
         for (String key : keys) {
             List<Vector> vectorListOfIndividu = dataBase.get(key);
             double thresholdPersonnalized = getThreshold_PersonnalizedForAnImage(vectorListOfIndividu);
+            double bestDistanceForLabel = Double.POSITIVE_INFINITY;
 
             for (Vector img : vectorListOfIndividu) {
-                if (distance(target, img) < thresholdPersonnalized) {
-                    estTrouve = true;
-                    result = key;
-                    break;
-                }
+                bestDistanceForLabel = Math.min(bestDistanceForLabel, distance(target, img));
             }
 
-            if (estTrouve) {
-                break;
+            if (bestDistanceForLabel <= thresholdPersonnalized
+                    && bestDistanceForLabel < bestAcceptedDistance) {
+                bestAcceptedDistance = bestDistanceForLabel;
+                bestLabel = key;
             }
-
         }
 
+        if (bestLabel.isEmpty()) {
+            return "";
+        }
 
-        return result;
+        return bestLabel;
+    }
+
+    public MatchDiagnostic diagnoseMatch(Vector target, Map<String, List<Vector>> dataBase, String expectedLabel) {
+        String nearestLabel = "";
+        String nearestAcceptedLabel = "";
+        double nearestDistance = Double.POSITIVE_INFINITY;
+        double nearestAcceptedDistance = Double.POSITIVE_INFINITY;
+        double expectedDistance = Double.POSITIVE_INFINITY;
+        double expectedThreshold = Double.POSITIVE_INFINITY;
+
+        for (String key : dataBase.keySet()) {
+            List<Vector> vectorListOfIndividu = dataBase.get(key);
+            double thresholdPersonnalized = getThreshold_PersonnalizedForAnImage(vectorListOfIndividu);
+            double bestDistanceForLabel = Double.POSITIVE_INFINITY;
+
+            for (Vector img : vectorListOfIndividu) {
+                bestDistanceForLabel = Math.min(bestDistanceForLabel, distance(target, img));
+            }
+
+            if (bestDistanceForLabel < nearestDistance) {
+                nearestDistance = bestDistanceForLabel;
+                nearestLabel = key;
+            }
+
+            if (bestDistanceForLabel <= thresholdPersonnalized
+                    && bestDistanceForLabel < nearestAcceptedDistance) {
+                nearestAcceptedDistance = bestDistanceForLabel;
+                nearestAcceptedLabel = key;
+            }
+
+            if (key.equals(expectedLabel)) {
+                expectedDistance = bestDistanceForLabel;
+                expectedThreshold = thresholdPersonnalized;
+            }
+        }
+
+        return new MatchDiagnostic(
+                nearestLabel,
+                nearestAcceptedLabel,
+                nearestDistance,
+                nearestAcceptedDistance,
+                expectedDistance,
+                expectedThreshold
+        );
+    }
+
+    static class MatchDiagnostic {
+        final String nearestLabel;
+        final String nearestAcceptedLabel;
+        final double nearestDistance;
+        final double nearestAcceptedDistance;
+        final double expectedDistance;
+        final double expectedThreshold;
+
+        MatchDiagnostic(
+                String nearestLabel,
+                String nearestAcceptedLabel,
+                double nearestDistance,
+                double nearestAcceptedDistance,
+                double expectedDistance,
+                double expectedThreshold
+        ) {
+            this.nearestLabel = nearestLabel;
+            this.nearestAcceptedLabel = nearestAcceptedLabel;
+            this.nearestDistance = nearestDistance;
+            this.nearestAcceptedDistance = nearestAcceptedDistance;
+            this.expectedDistance = expectedDistance;
+            this.expectedThreshold = expectedThreshold;
+        }
+
+        boolean nearestLabelIsExpected(String expectedLabel) {
+            return expectedLabel.equals(nearestLabel);
+        }
+
+        boolean expectedPassesThreshold() {
+            return expectedDistance <= expectedThreshold;
+        }
+
+        boolean acceptedLabelIsExpected(String expectedLabel) {
+            return expectedLabel.equals(nearestAcceptedLabel);
+        }
     }
 
 
