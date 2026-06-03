@@ -16,6 +16,12 @@ import math.Vector;
 
 public class Image {
 
+    private static final int CELEBA_RAW_WIDTH = 178;
+    private static final int CELEBA_RAW_HEIGHT = 218;
+    private static final int CELEBA_FACE_CROP_LEFT = 25;
+    private static final int CELEBA_FACE_CROP_TOP = 65;
+    private static final int CELEBA_FACE_CROP_SIZE = 128;
+    private static final int CELEBA_FACE_OUTPUT_SIZE = 64;
 
     String pathToImage;
     Matrix matrixChangingBase;
@@ -56,7 +62,7 @@ public class Image {
      */
 
     int getNumberOfPixel() throws IOException {
-        BufferedImage image = ImageIO.read(new File(this.pathToImage));
+        BufferedImage image = readPreparedImage();
 
         int width = image.getWidth();
         int heigth = image.getHeight();
@@ -72,7 +78,7 @@ public class Image {
 
 
         //reading the image
-        BufferedImage image = ImageIO.read(new File(this.pathToImage));
+        BufferedImage image = readPreparedImage();
 
         int width = image.getWidth();
         int heigth = image.getHeight();
@@ -101,6 +107,41 @@ public class Image {
 
     }
 
+    private BufferedImage readPreparedImage() throws IOException {
+        BufferedImage image = ImageIO.read(new File(this.pathToImage));
+
+        if (image == null) {
+            throw new IOException("Cannot read image '" + this.pathToImage + "'");
+        }
+
+        if (isRawCelebAImage(image)) {
+            image = image.getSubimage(
+                    CELEBA_FACE_CROP_LEFT,
+                    CELEBA_FACE_CROP_TOP,
+                    CELEBA_FACE_CROP_SIZE,
+                    CELEBA_FACE_CROP_SIZE
+            );
+            image = resize(image, CELEBA_FACE_OUTPUT_SIZE, CELEBA_FACE_OUTPUT_SIZE);
+        }
+
+        return image;
+    }
+
+    private boolean isRawCelebAImage(BufferedImage image) {
+        return image.getWidth() == CELEBA_RAW_WIDTH && image.getHeight() == CELEBA_RAW_HEIGHT;
+    }
+
+    private BufferedImage resize(BufferedImage source, int width, int height) {
+        BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+        Graphics2D graphics = resized.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        graphics.drawImage(source, 0, 0, width, height, null);
+        graphics.dispose();
+        return resized;
+    }
+
     /**
      * setter to set the label of picture for example 18 for face that have the id 18
      * @param label
@@ -112,6 +153,22 @@ public class Image {
 
     public String getLabel() {
         return label;
+    }
+
+    public String getPathToImage() {
+        return pathToImage;
+    }
+
+    static String labelFromFolderName(String folderName) {
+        if (folderName.matches("\\d+")) {
+            return folderName;
+        }
+
+        if (folderName.matches("personne_\\d+")) {
+            return folderName.substring("personne_".length());
+        }
+
+        return "";
     }
 
     /**
@@ -241,7 +298,7 @@ public class Image {
         g2d.drawImage(original, 0, 0, 64, 64, null);
         g2d.dispose();
 
-        String personneFolder = String.format("personne_%03d", personneId);
+        String personneFolder = String.format("%03d", personneId);
         String fileName = String.format("img_%02d.jpg", imageNum);  // ← .jpg
 
         File outputDir = new File(BASE_DIR + File.separator + personneFolder);

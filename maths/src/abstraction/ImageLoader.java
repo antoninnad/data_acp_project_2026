@@ -23,7 +23,12 @@ public class ImageLoader {
         List<Image> images = new ArrayList<>();
 
         for (File personneFolder : personneFolders) {
-            int personneId = Integer.parseInt(personneFolder.getName());
+            String label = Image.labelFromFolderName(personneFolder.getName());
+            if (label.isEmpty()) {
+                continue;
+            }
+
+            int personneId = Integer.parseInt(label);
 
             File[] files = personneFolder.listFiles(f ->
                 f.getName().endsWith(".jpg") || f.getName().endsWith(".png")
@@ -38,7 +43,7 @@ public class ImageLoader {
                     personneId,
                     i + 1
                 );
-                images.add(new Image(converted.getAbsolutePath(), personneFolder.getName()));
+                images.add(new Image(converted.getAbsolutePath(), label));
             }
         }
 
@@ -78,7 +83,7 @@ public class ImageLoader {
                     i + 1
                 );
                 // Add to filtered images list
-                filteredImages.add(new Image(converted.getAbsolutePath(), String.valueOf(personneId)));
+                filteredImages.add(new Image(converted.getAbsolutePath(), String.format("%03d", personneId)));
                 count++;
             } catch (IOException e) {
                 System.err.println("Erreur lors du traitement de l'image : " + files[i].getAbsolutePath());

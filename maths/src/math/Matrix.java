@@ -8,6 +8,8 @@ import math.linear.EigenDecomposition;
 import math.linear.MatrixUtils;
 import math.linear.RealMatrix;
 
+import java.util.Locale;
+
 
 
 /**
@@ -159,6 +161,9 @@ public class Matrix {
      * if the matrix isn't a square matrix, the eigen decomposition doesn't exist
      */
     private void eigenDecompose() throws DimensionMismatchException {
+    	if (diagonalisation != null) {
+    		return;
+    	}
     	if (!isSquare()) {
     		throw new DimensionMismatchException(getNbRows(), getNbColumns());
     	}
@@ -238,6 +243,36 @@ public class Matrix {
 		return transposedMatrix.multiply(this);
 
 	}	
+
+	/**
+	 * Calculates the covariance matrix by blocks so long multiplications can report progress.
+	 * @param blockSize number of covariance rows computed at each step
+	 * @return covariate matrix (dimension = pxp)
+	 */
+	public Matrix covariateMatrixWithProgress(int blockSize) throws DimensionMismatchException {
+		int rows = getNbRows();
+		int columns = getNbColumns();
+		int safeBlockSize = Math.max(1, blockSize);
+		Matrix covariance = new Matrix(columns, columns);
+
+		for (int start = 0; start < columns; start += safeBlockSize) {
+			int end = Math.min(start + safeBlockSize - 1, columns - 1);
+			RealMatrix columnBlock = matrix.getSubMatrix(0, rows - 1, start, end);
+			RealMatrix covarianceBlock = columnBlock.transpose().multiply(matrix);
+			covariance.getRealMatrix().setSubMatrix(covarianceBlock.getData(), start, 0);
+
+			double progress = 100.0 * (end + 1) / columns;
+			System.out.printf(Locale.US,
+					"[ACP] covariance : %.2f%% (%d/%d colonnes)%n",
+					progress,
+					end + 1,
+					columns
+			);
+		}
+
+		return covariance;
+
+	}
     
     /**
 	 * Norms the columns of the Matrix (of RealMatrix) to 1
@@ -252,7 +287,7 @@ public class Matrix {
 	 * @param end Column where to stop norming
 	 * */
 	public void normColumns(int start, int end) throws OutOfRangeException {
-    	for (int i=start; i<end; i++) {
+    	for (int i=start; i<=end; i++) {
     		setColumn(i, getColumn(i).normalise());
     	}
     }
@@ -321,7 +356,7 @@ public class Matrix {
 	 * if the indexes are incompatible, an error is thrown
 	 * */
     public Matrix getSubColumns(int start, int end) throws OutOfRangeException {
-    	return new Matrix(matrix.getSubMatrix(0,  this.getNbColumns()-1, start, end));
+    	return new Matrix(matrix.getSubMatrix(0,  this.getNbRows()-1, start, end));
     }
     
 
@@ -380,11 +415,6 @@ public class Matrix {
 
 
 }
-
-
-
-
-
 
 
 
