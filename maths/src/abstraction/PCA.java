@@ -424,6 +424,14 @@ public class PCA {
 	public static void main(String[] args) throws FileNotFoundException {
 		 try {
 			 PCA pca = new PCA();
+			 Query q = new Query();
+			Image target = new Image("../Celeba_HQ_facial_identity_dataset/test/5/312.jpg", "inconnu");
+			q.findClosestNeighbour(target.getPixels(), pca);
+			 if (q.getResult() == null) {
+				 System.out.println("No match found");
+			 } else {
+				 System.out.println(q.getResult().getLabel());
+			 }}
 		 } catch (IOException e) {
 			 throw new FileNotFoundException(); 
 		 
