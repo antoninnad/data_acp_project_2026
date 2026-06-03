@@ -271,11 +271,6 @@ Note : certaines classes de tests manuels historiques utilisent encore d'anciens
 - Nettoyer les anciens chemins de test pour uniformiser tous les scripts sur `data_filtred3`.
 - Ajouter une analyse plus détaillée des erreurs de classification.
 
-## Présentation courte pour LinkedIn
-
-Projet de reconnaissance faciale en Java basé sur l'Analyse en Composantes Principales. J'ai implémenté un pipeline complet allant de la vectorisation d'images 64x64 à la construction d'eigenfaces, la projection dans un espace réduit, la recherche par distance cosinus et l'évaluation open set avec rejet des identités inconnues.
-
-Technologies : Java 21, Maven, algèbre linéaire, ACP, traitement d'images, reconnaissance de formes.
 
 ## Licence
 
