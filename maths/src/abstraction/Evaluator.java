@@ -19,14 +19,15 @@ public class Evaluator {
     private static final String TRAINING_DIR = "data_filtred3/train";
     private static final int MAX_INDIVIDUALS_FOR_TRAINING = 20;
     private static final int MAX_UNKNOWN_INDIVIDUALS_FOR_TEST = 20;
-    private static final double DEFAULT_THRESHOLD = 1.7;
+    private static final double DEFAULT_THRESHOLD = 0.07;
     private PCA pca;
     private Map<String, List<Vector>> dataBase;
     private Query query;
 
 
-
-
+    /**
+     * to get information for the quality of acp
+     */
     public void getMatrixConfusion() {
 
         try {
@@ -47,6 +48,8 @@ public class Evaluator {
                     MAX_INDIVIDUALS_FOR_TRAINING + MAX_UNKNOWN_INDIVIDUALS_FOR_TEST
             );
             Set<String> knownLabels = dataBase.keySet();
+
+            //lauching the test
 
             for (Image image : imagesToEvaluate) {
                 String expectedLabel = image.getLabel();
@@ -91,11 +94,14 @@ public class Evaluator {
                 }
             }
 
+            // all the metrics
+
             int total = knownCorrect + knownRejected + knownMisclassified;
             int unknownTotal = unknownAccepted + unknownRejected;
             double accuracy = total == 0 ? 0.0 : (double) knownCorrect / total;
             double discriminationRate = total == 0 ? 0.0 : (double) nearestLabelCorrect / total;
             double openSetAccuracy = total + unknownTotal == 0 ? 0.0 : (double) (knownCorrect + unknownRejected) / (total + unknownTotal);
+
 
             System.out.println("Evaluation terminee : " + (total + unknownTotal) + " images testees depuis " + resolveExistingDirectory(TESTING_DIR));
             System.out.println("trainingIndividuals=" + MAX_INDIVIDUALS_FOR_TRAINING);

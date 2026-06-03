@@ -10,7 +10,7 @@ import java.util.Set;
 class Query {
 
     protected double threshold_similarity;
-    private static final double ALPHA_SURVARIANCE = 1.00;
+    private static final double ALPHA_SURVARIANCE = 1.15;
     private final Map<List<Vector>, Double> thresholdCache = new IdentityHashMap<>();
 
     public Query(double threshold_similarity) {
