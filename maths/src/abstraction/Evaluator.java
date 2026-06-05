@@ -101,7 +101,7 @@ public class Evaluator {
 
             int total = knownCorrect + knownRejected + knownMisclassified;
             int unknownTotal = unknownAccepted + unknownRejected;
-            double accuracy = total == 0 ? 0.0 : knownCorrect / total;
+            double accuracy = total == 0 ? 0.0 : (double) knownCorrect / total;
             double discriminationRate = total == 0 ? 0.0 : (double) nearestLabelCorrect / total;
             double openSetAccuracy = total + unknownTotal == 0 ? 0.0 : (double) (knownCorrect + unknownRejected) / (total + unknownTotal);
             int predictedKnownTotal = knownCorrect + knownMisclassified + unknownAccepted;
