@@ -101,7 +101,7 @@ public class Evaluator {
 
             int total = knownCorrect + knownRejected + knownMisclassified;
             int unknownTotal = unknownAccepted + unknownRejected;
-            double accuracy = total == 0 ? 0.0 : (double) knownCorrect / total;
+            double accuracy = total == 0 ? 0.0 : knownCorrect / total;
             double discriminationRate = total == 0 ? 0.0 : (double) nearestLabelCorrect / total;
             double openSetAccuracy = total + unknownTotal == 0 ? 0.0 : (double) (knownCorrect + unknownRejected) / (total + unknownTotal);
             int predictedKnownTotal = knownCorrect + knownMisclassified + unknownAccepted;
@@ -143,6 +143,13 @@ public class Evaluator {
 
     }
 
+    /**
+     * to show when we get a mismatch only for debug
+     * @param image
+     * @param predictedLabel
+     * @param diagnostic
+     */
+
     private void logMismatch(Image image, String predictedLabel, Query.MatchDiagnostic diagnostic) {
         System.out.printf(
                 Locale.US,
@@ -163,6 +170,11 @@ public class Evaluator {
     }
 
 
+    /**
+     * to get the new PCa and normalize if pca change
+     * @throws IOException
+     */
+
     private void setANewPca() throws IOException {
 
         PCA pca = new PCA(resolveExistingDirectory(TRAINING_DIR), MAX_INDIVIDUALS_FOR_TRAINING, false);
@@ -178,7 +190,7 @@ public class Evaluator {
         Matrix projectedFaces = pca.getProjectedFacesOnKeptAxes();
 
         if (projectedFaces == null) {
-            throw new AssertionError("Les images n'ont pas ete projetees dans l'espace ACP");
+            throw new AssertionError("Les images n'ont pas ete projetées dans l'espace ACP");
         }
 
         if (projectedFaces.getNbRows() != pca.getNumberOfKeptAxes()) {
@@ -228,6 +240,14 @@ public class Evaluator {
         return query.findBestMatch(projectedImage, dataBase);
     }
 
+    /**
+     * to load of the personn
+     * @param sourceDir
+     * @param maxIndividualsToLoad
+     * @return
+     * @throws IOException
+     */
+
     private List<Image> loadImages(String sourceDir, int maxIndividualsToLoad) throws IOException {
         File root = new File(resolveExistingDirectory(sourceDir));
         File[] personneFolders = root.listFiles(File::isDirectory);
@@ -237,6 +257,7 @@ public class Evaluator {
         }
 
         List<Image> images = new ArrayList<>();
+        //sort he person folders to get the same then in pca at 0 we get the person with id 1 etc ..
         Arrays.sort(personneFolders, Comparator.comparingInt(this::personFolderSortValue).thenComparing(File::getName));
         int loadedIndividuals = 0;
 
@@ -273,10 +294,23 @@ public class Evaluator {
         return images;
     }
 
+    /**
+     *
+     * @param folder
+     * @return
+     */
+
     private int personFolderSortValue(File folder) {
         String label = Image.labelFromFolderName(folder.getName());
         return label.isEmpty() ? Integer.MAX_VALUE : Integer.parseInt(label);
     }
+
+    /**
+     * to get a compatibility between intelij and eclipse some one does not set the source of project
+     * @param path
+     * @return the true existing path
+     * @throws IOException
+     */
 
     private String resolveExistingDirectory(String path) throws IOException {
         File fromCurrentDirectory = new File(path);
@@ -284,11 +318,15 @@ public class Evaluator {
             return fromCurrentDirectory.getPath();
         }
 
+        //because for someone we have in ..
+
         File fromParentDirectory = new File("..", path);
         if (fromParentDirectory.isDirectory()) {
             return fromParentDirectory.getPath();
         }
 
-        throw new IOException("cannot access '" + path + "': No such file or directory");
+        // ADD A NEW CONDITION IF IS NOT WORKING
+
+        throw new IOException("cannot access '" + path + "': No such file or directory PLEASE RESOLVE IT IN Evaluator.resolveExistingDirectory");
     }
 }

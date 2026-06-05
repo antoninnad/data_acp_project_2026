@@ -9,9 +9,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
-
-import java.util.*;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Random;
+import java.util.Scanner;
 //reading of the save file
 
 import math.Matrix;
@@ -121,20 +126,20 @@ public class PCA {
 			reportProgress("calcul de la matrice de covariance");
 			cov = facesCoordinates.covariateMatrixWithProgress(128);
 
-			// Fetching the dominant eigenvectors and computing the necessary number of axes.
-			reportProgress("calcul iteratif des meilleurs axes propres");
-			EigenSelection eigenSelection = computeDominantEigenvectors();
-			numberOfKeptAxes = eigenSelection.eigenvectors.getNbColumns();
-			maxNbOfKeptAxes = numberOfKeptAxes;  // Setting the maximum number of axes considered up to now
-			reportProgress(numberOfKeptAxes + " axes gardes");
+				// Fetching the dominant eigenvectors and computing the necessary number of axes.
+				reportProgress("calcul iteratif des meilleurs axes propres");
+				Matrix dominantEigenvectors = computeDominantEigenvectors();
+				numberOfKeptAxes = dominantEigenvectors.getNbColumns();
+				maxNbOfKeptAxes = numberOfKeptAxes;  // Setting the maximum number of axes considered up to now
+				reportProgress(numberOfKeptAxes + " axes gardes");
 
 
 
 			/****** Calculating the eigenfaces : eigenvectors of the centred facesCoordinates ******/
 
-			// Computing the original eigenvectors
-			reportProgress("calcul des eigenfaces");
-			eigenfaces = facesCoordinates.multiply(eigenSelection.eigenvectors); // We only keep the number of eigenvectors previously computed
+				// Computing the original eigenvectors
+				reportProgress("calcul des eigenfaces");
+				eigenfaces = facesCoordinates.multiply(dominantEigenvectors); // We only keep the number of eigenvectors previously computed
 
 			// Creating the .jpg eigenfaces
 			if (writeDebugImages) {
@@ -160,9 +165,22 @@ public class PCA {
 		}
 	}
 
+
+	/**
+	 * for debug and progression acp
+	 * @param message
+	 */
+
 	private void reportProgress(String message) {
 		System.out.println("[ACP] " + message);
 	}
+
+	/**
+	 * for debug and pca progression
+	 * @param label
+	 * @param done
+	 * @param total
+	 */
 
 	private void reportItemProgress(String label, int done, int total) {
 		if (done == total || done % 100 == 0) {
@@ -170,38 +188,41 @@ public class PCA {
 		}
 	}
 
-	private EigenSelection computeDominantEigenvectors() {
+	/**
+	 * Computes the dominant covariance eigenvectors with power iteration.
+	 * @return eigenvectors needed to reach the configure inerty threshold
+	 */
+	private Matrix computeDominantEigenvectors() {
 		int dimension = cov.getNbColumns();
 		int maxAxes = Math.min(100, dimension);
 		double totalEnergy = Math.max(cov.trace(), 0.0);
 		Matrix eigenvectors = new Matrix(dimension, maxAxes);
-		double[][] keptVectors = new double[maxAxes][];
+		Vector[] keptVectors = new Vector[maxAxes];
 		double cumulativeEnergy = 0.0;
 		int keptAxes = 0;
 		Random random = new Random(0);
 
 		if (totalEnergy == 0.0) {
 			eigenvectors.setColumn(0, new Vector(new double[dimension]));
-			return new EigenSelection(eigenvectors.subMatrixFirstColumns(0));
+			return eigenvectors.subMatrixFirstColumns(0);
 		}
 
 		for (int axis = 0; axis < maxAxes; axis++) {
-			double[] vector = randomUnitVector(dimension, random);
-			orthogonalize(vector, keptVectors, keptAxes);
-			normalise(vector);
+			Vector vector = orthogonalize(randomUnitVector(dimension, random), keptVectors, keptAxes).normalise();
+
+			//this sintax to not get iteration as a local variable on for
 			int iterations = 0;
 
 			for (; iterations < maxPowerIterations; iterations++) {
-				double[] nextVector = cov.getRealMatrix().operate(vector);
-				orthogonalize(nextVector, keptVectors, keptAxes);
+				Vector nextVector = orthogonalize(cov.multiply(vector), keptVectors, keptAxes);
 
-				double norm = norm(nextVector);
+				double norm = nextVector.norm();
 				if (norm == 0.0) {
 					break;
 				}
 
-				scale(nextVector, 1.0 / norm);
-				double alignment = Math.abs(dot(vector, nextVector));
+				nextVector = nextVector.normalise();
+				double alignment = Math.abs(vector.dotProduct(nextVector));
 				vector = nextVector;
 
 				if (1.0 - alignment < powerIterationTolerance) {
@@ -221,13 +242,13 @@ public class PCA {
 				}
 			}
 
-			double eigenvalue = dot(vector, cov.getRealMatrix().operate(vector));
+			double eigenvalue = vector.dotProduct(cov.multiply(vector));
 			if (eigenvalue <= 0.0) {
 				break;
 			}
 
 			keptVectors[keptAxes] = vector;
-			eigenvectors.setColumn(keptAxes, new Vector(vector));
+			eigenvectors.setColumn(keptAxes, vector);
 			keptAxes++;
 			cumulativeEnergy += eigenvalue;
 
@@ -247,43 +268,39 @@ public class PCA {
 			}
 		}
 
-		return new EigenSelection(eigenvectors.subMatrixFirstColumns(Math.max(0, keptAxes - 1)));
+		return eigenvectors.subMatrixFirstColumns(Math.max(0, keptAxes - 1));
 	}
 
-	private double[] randomUnitVector(int dimension, Random random) {
-		double[] vector = new double[dimension];
+	/**
+	 * Creates the normalized starting vector used by power iteration.
+	 */
+	private Vector randomUnitVector(int dimension, Random random) {
+		Vector vector = new Vector(dimension);
 
-		for (int i = 0; i < vector.length; i++) {
-			vector[i] = random.nextDouble() - 0.5;
+		for (int i = 0; i < dimension; i++) {
+			vector.set(i, random.nextDouble() - 0.5);
 		}
 
-		normalise(vector);
-		return vector;
+		return vector.normalise();
 	}
 
-	private void orthogonalize(double[] vector, double[][] keptVectors, int keptAxes) {
+	/**
+	 * Removes projections on eigenvectors that have already been selected.
+	 */
+	private Vector orthogonalize(Vector vector, Vector[] keptVectors, int keptAxes) {
+		Vector result = vector;
+
 		for (int axis = 0; axis < keptAxes; axis++) {
-			double projection = dot(vector, keptVectors[axis]);
-
-			for (int i = 0; i < vector.length; i++) {
-				vector[i] -= projection * keptVectors[axis][i];
-			}
+			double projection = result.dotProduct(keptVectors[axis]);
+			result = result.difference(keptVectors[axis].multiplicationScalar(projection));
 		}
+
+		return result;
 	}
 
-	private void normalise(double[] vector) {
-		double norm = norm(vector);
-
-		if (norm > 0.0) {
-			scale(vector, 1.0 / norm);
-		}
-	}
-
-	private void scale(double[] vector, double scale) {
-		for (int i = 0; i < vector.length; i++) {
-			vector[i] *= scale;
-		}
-	}
+	/**
+	 * to set mean Vector and standardDeviation
+	 */
 
 	private void standardizeTrainingPixels() {
 		int rows = facesCoordinates.getNbRows();
@@ -312,7 +329,9 @@ public class PCA {
 			variances[row] = Math.sqrt(variance / columns);
 		}
 
+		//meansVector
 		pixelMeans = new Vector(means);
+		//standardDeviation vector
 		pixelStandardDeviations = new Vector(variances);
 
 		for (int column = 0; column < columns; column++) {
@@ -320,6 +339,12 @@ public class PCA {
 			reportItemProgress("images standardisees", column + 1, columns);
 		}
 	}
+
+	/**
+	 * We standardize the variable by subtracting its mean and dividing by its standard deviation.
+	 * @param pixels
+	 * @return
+	 */
 
 	private Vector standardizeWithTrainingPixels(Vector pixels) {
 		if (pixelMeans == null || pixelStandardDeviations == null) {
@@ -330,6 +355,8 @@ public class PCA {
 
 		for (int i = 0; i < pixels.getDimension(); i++) {
 			double standardDeviation = pixelStandardDeviations.get(i);
+
+			// standardize
 			standardizedData[i] = standardDeviation == 0.0
 					? 0.0
 					: (pixels.get(i) - pixelMeans.get(i)) / standardDeviation;
@@ -337,30 +364,6 @@ public class PCA {
 
 		return new Vector(standardizedData);
 	}
-
-	private double norm(double[] vector) {
-		return Math.sqrt(dot(vector, vector));
-	}
-
-	private double dot(double[] first, double[] second) {
-		double result = 0.0;
-
-		for (int i = 0; i < first.length; i++) {
-			result += first[i] * second[i];
-		}
-
-		return result;
-	}
-
-	private static class EigenSelection {
-		private final Matrix eigenvectors;
-
-		private EigenSelection(Matrix eigenvectors) {
-			this.eigenvectors = eigenvectors;
-		}
-	}
-
-
 
 	/**
 	 * Getter for the numberOfKeptAxes attribute
@@ -628,20 +631,13 @@ public class PCA {
 		}
 
 		int numberImg = facesCoordinates.getNbColumns();
-		double[] meanData = new double[facesCoordinates.getNbRows()];
+		Vector sum = new Vector(facesCoordinates.getNbRows());
 
 		for (int column = 0; column < numberImg; column++) {
-			Vector imagePixels = facesCoordinates.getColumn(column);
-			for (int row = 0; row < imagePixels.getDimension(); row++) {
-				meanData[row] += imagePixels.get(row);
-			}
+			sum = sum.addition(facesCoordinates.getColumn(column));
 		}
 
-		for (int i = 0; i < meanData.length; i++) {
-			meanData[i] /= numberImg;
-		}
-
-		meanFace = new Vector(meanData);
+		meanFace = sum.multiplicationScalar(1.0 / numberImg);
 	}
 
 
@@ -738,18 +734,27 @@ public class PCA {
 
 	}
 
+	/**
+	 * to get a compatibility between intelij and eclipse some one does not set the source of project
+	 * @param path
+	 * @return the true existing path
+	 * @throws IOException
+	 */
+
 	private static String resolveExistingDirectory(String path) throws IOException {
 		File fromCurrentDirectory = new File(path);
 		if (fromCurrentDirectory.isDirectory()) {
 			return fromCurrentDirectory.getPath();
 		}
 
+		//because for someone we have in ..
+
 		File fromParentDirectory = new File("..", path);
 		if (fromParentDirectory.isDirectory()) {
 			return fromParentDirectory.getPath();
 		}
 
-		throw new IOException("cannot access '" + path + "': No such file or directory");
+		throw new IOException("cannot access '" + path + "': No such file or directory PLEASE RESOLVE IT IN PCA.resolveExistingDirectory");
 	}
 
 	public static void main(String[] args) throws IOException {

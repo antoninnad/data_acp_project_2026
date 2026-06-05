@@ -82,15 +82,25 @@ public class Matrix {
      * @return
      * @throws DimensionMismatchException
      */
-    public Matrix multiply(Matrix m) throws DimensionMismatchException {
-    	return new Matrix(this.matrix.multiply(m.getRealMatrix()));
-    }
+	public Matrix multiply(Matrix m) throws DimensionMismatchException {
+		return new Matrix(this.matrix.multiply(m.getRealMatrix()));
+	}
 
-    
-    /**
-     * Computes the transpose matrix of this object
-     * @return A Matrix of switched dimensions
-     */
+	/**
+	 * Performs the multiplication between this matrix and a column vector.
+	 * @param vector vector on the right side of the multiplication
+	 * @return the resulting vector
+	 * @throws DimensionMismatchException if the dimensions are incompatible
+	 */
+	public Vector multiply(Vector vector) throws DimensionMismatchException {
+		return new Vector(this.matrix.operate(vector.getData()));
+	}
+
+
+	/**
+	     * Computes the transpose matrix of this object
+	     * @return A Matrix of switched dimensions
+	     */
     public Matrix transpose() {
     	return new Matrix(this.matrix.transpose());
     }
@@ -415,9 +425,6 @@ public class Matrix {
 
 
 }
-
-
-
 
 
 

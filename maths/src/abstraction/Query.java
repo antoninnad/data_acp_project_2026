@@ -226,6 +226,8 @@ class Query {
         );
     }
 
+    // class for the test to centralize and for readability
+
     static class MatchDiagnostic {
         final String nearestLabel;
         final String nearestAcceptedLabel;
