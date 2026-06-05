@@ -11,8 +11,8 @@ class Query {
 
     protected double threshold_similarity;
     private final Map<List<Vector>, Double> thresholdCache = new IdentityHashMap<>();
-    private static final double ALPHA_SURVARIANCE = 2.0;
-    private static final double MAX_THRESHOLD = 0.30;
+    private static final double ALPHA_SURVARIANCE = 2;
+    private static final double MAX_THRESHOLD = 0.31;
 
     public Query(double threshold_similarity) {
         this.threshold_similarity = threshold_similarity;

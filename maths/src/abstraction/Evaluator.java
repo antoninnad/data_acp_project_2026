@@ -17,9 +17,9 @@ public class Evaluator {
 
     private static final String TESTING_DIR = "data_filtred3/test";
     private static final String TRAINING_DIR = "data_filtred3/train";
-    private static final int MAX_INDIVIDUALS_FOR_TRAINING = 20;
+    private static final int MAX_INDIVIDUALS_FOR_TRAINING = 15;
     private static final int MAX_UNKNOWN_INDIVIDUALS_FOR_TEST = 20;
-    private static final double DEFAULT_THRESHOLD = 0.07;
+    private static final double DEFAULT_THRESHOLD = 0.10;
     private PCA pca;
     private Map<String, List<Vector>> dataBase;
     private Query query;
