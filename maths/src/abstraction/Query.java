@@ -10,8 +10,9 @@ import java.util.Set;
 class Query {
 
     protected double threshold_similarity;
-    private static final double ALPHA_SURVARIANCE = 1.05;
     private final Map<List<Vector>, Double> thresholdCache = new IdentityHashMap<>();
+    private static final double ALPHA_SURVARIANCE = 2.0;
+    private static final double MAX_THRESHOLD = 0.30;
 
     public Query(double threshold_similarity) {
         this.threshold_similarity = threshold_similarity;
@@ -135,8 +136,11 @@ class Query {
         }
         double stdDev = Math.sqrt(variance / dataSetPersonne.size());
 
-        // Seuil = moyenne + k * écart-type  (couvre ~95% des images connues avec k=2)
-        double threshold = Math.max(meanDistance + ALPHA_SURVARIANCE * stdDev, threshold_similarity);
+        // Seuil = moyenne + alpha * écart-type, plafonné et planché
+        double threshold = meanDistance + ALPHA_SURVARIANCE * stdDev;
+        threshold = Math.max(threshold, threshold_similarity); // plancher
+        threshold = Math.min(threshold, MAX_THRESHOLD);        // plafond
+
         thresholdCache.put(dataSetPersonne, threshold);
         return threshold;
     }
