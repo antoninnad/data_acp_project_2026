@@ -10,7 +10,7 @@ import java.util.Set;
 class Query {
 
     protected double threshold_similarity;
-    private static final double ALPHA_SURVARIANCE = 1.15;
+    private static final double ALPHA_SURVARIANCE = 1.05;
     private final Map<List<Vector>, Double> thresholdCache = new IdentityHashMap<>();
 
     public Query(double threshold_similarity) {
@@ -49,7 +49,22 @@ class Query {
      * @return the distance between vect a and b
      */
     private double distance(Vector a, Vector b) {
-        return cosineDistance(a, b);
+        double cos = cosineDistance(a, b);
+
+        double euclidean = Math.sqrt(squaredNorme(a, b));
+        double normalizedEuclidean = euclidean / (norm(a) + norm(b) + 1e-12);
+
+        return cos;
+    }
+
+    private double norm(Vector v) {
+        double result = 0.0;
+
+        for (int i = 0; i < v.getDimension(); i++) {
+            result += v.get(i) * v.get(i);
+        }
+
+        return Math.sqrt(result);
     }
 
     private double cosineDistance(Vector a, Vector b) {
@@ -91,24 +106,29 @@ class Query {
             return threshold_similarity;
         }
 
-        double threshold = 0.0;
+        // Calcul de l'épicentre (centroïde) du cluster
+        int dim = dataSetPersonne.get(0).getDimension();
+        double[] centroidCoords = new double[dim];
 
-        for (int i = 0; i < dataSetPersonne.size(); i++) {
-            double nearestDistance = Double.POSITIVE_INFINITY;
-
-            for (int j = 0; j < dataSetPersonne.size(); j++) {
-                if (i != j) {
-                    nearestDistance = Math.min(
-                            nearestDistance,
-                            distance(dataSetPersonne.get(i), dataSetPersonne.get(j))
-                    );
-                }
+        for (Vector v : dataSetPersonne) {
+            for (int d = 0; d < dim; d++) {
+                centroidCoords[d] += v.get(d);
             }
-
-            threshold = Math.max(threshold, nearestDistance);
+        }
+        for (int d = 0; d < dim; d++) {
+            centroidCoords[d] /= dataSetPersonne.size();
         }
 
-        threshold = Math.max(ALPHA_SURVARIANCE * threshold, threshold_similarity);
+        Vector centroid = new Vector(centroidCoords);
+
+        // Moyenne des distances de chaque point au centroïde
+        double sumDistances = 0.0;
+        for (Vector v : dataSetPersonne) {
+            sumDistances += distance(v, centroid);
+        }
+        double meanDistance = sumDistances / dataSetPersonne.size();
+
+        double threshold = Math.max(ALPHA_SURVARIANCE * meanDistance, threshold_similarity);
         thresholdCache.put(dataSetPersonne, threshold);
         return threshold;
     }
@@ -138,6 +158,7 @@ class Query {
             if (bestDistanceForLabel <= thresholdPersonnalized
                     && bestDistanceForLabel < bestAcceptedDistance) {
                 bestAcceptedDistance = bestDistanceForLabel;
+                System.out.println("[Query] Distance acceptée threshold =" + thresholdPersonnalized + " distance=" + bestDistanceForLabel);
                 bestLabel = key;
             }
         }

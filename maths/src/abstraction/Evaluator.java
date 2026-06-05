@@ -58,7 +58,10 @@ public class Evaluator {
                 boolean isPredictedKnown = !predictedLabel.isEmpty();
 
                 if (!knownLabels.contains(expectedLabel)) {
+
+
                     if (isPredictedKnown) {
+                        System.out.println("[Test] accepted but should be not");
                         unknownAccepted++;
                     } else {
                         unknownRejected++;
