@@ -106,10 +106,9 @@ class Query {
             return threshold_similarity;
         }
 
-        // Calcul de l'épicentre (centroïde) du cluster
+        // Calcul du centroïde
         int dim = dataSetPersonne.get(0).getDimension();
         double[] centroidCoords = new double[dim];
-
         for (Vector v : dataSetPersonne) {
             for (int d = 0; d < dim; d++) {
                 centroidCoords[d] += v.get(d);
@@ -118,17 +117,26 @@ class Query {
         for (int d = 0; d < dim; d++) {
             centroidCoords[d] /= dataSetPersonne.size();
         }
-
         Vector centroid = new Vector(centroidCoords);
 
-        // Moyenne des distances de chaque point au centroïde
+        // Distances au centroïde
+        double[] distances = new double[dataSetPersonne.size()];
         double sumDistances = 0.0;
-        for (Vector v : dataSetPersonne) {
-            sumDistances += distance(v, centroid);
+        for (int i = 0; i < dataSetPersonne.size(); i++) {
+            distances[i] = distance(dataSetPersonne.get(i), centroid);
+            sumDistances += distances[i];
         }
         double meanDistance = sumDistances / dataSetPersonne.size();
 
-        double threshold = Math.max(ALPHA_SURVARIANCE * meanDistance, threshold_similarity);
+        // Écart-type des distances
+        double variance = 0.0;
+        for (double d : distances) {
+            variance += (d - meanDistance) * (d - meanDistance);
+        }
+        double stdDev = Math.sqrt(variance / dataSetPersonne.size());
+
+        // Seuil = moyenne + k * écart-type  (couvre ~95% des images connues avec k=2)
+        double threshold = Math.max(meanDistance + ALPHA_SURVARIANCE * stdDev, threshold_similarity);
         thresholdCache.put(dataSetPersonne, threshold);
         return threshold;
     }
