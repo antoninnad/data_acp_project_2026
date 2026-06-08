@@ -112,9 +112,10 @@ public class PCA {
 
 			// Creating the .jpg images associated to centred faces
 			if (writeDebugImages) {
-				Image.centeredVectorToImage(meanFace, "meanface.jpg");
+				new File("debug/visages").mkdirs();
+				Image.centeredVectorToImage(meanFace, "debug/meanface.jpg");
 				for (int i=0; i<facesCoordinates.getNbColumns(); i++) {
-					Image.centeredVectorToImage(facesCoordinates.getColumn(i), i+".jpg");
+					Image.centeredVectorToImage(facesCoordinates.getColumn(i), "debug/visages/" + i + ".jpg");
 				}
 			}
 			// Computing the covariance matrix
@@ -138,8 +139,9 @@ public class PCA {
 
 			// Creating the .jpg eigenfaces
 			if (writeDebugImages) {
+				new File("debug/eigenfaces").mkdirs();
 				for (int i=0; i<eigenfaces.getNbColumns(); i++) {
-					Image.centeredVectorToImage(eigenfaces.getColumn(i), "eigen"+i+".jpg");
+					Image.centeredVectorToImage(eigenfaces.getColumn(i), "debug/eigenfaces/eigen" + i + ".jpg");
 				}
 			}
 
