@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-class Query {
+public class Query {
 
     protected double threshold_similarity;
     private final Map<List<Vector>, Double> thresholdCache = new IdentityHashMap<>();

@@ -43,7 +43,7 @@ public class Image {
     /**
      * @param pathToImage path to the dataset that we want to use
      */
-    Image(String pathToImage, String label) throws FileNotFoundException {
+    public Image(String pathToImage, String label) throws FileNotFoundException {
 
         this.pathToImage = pathToImage;
         this.label = label;
@@ -74,7 +74,7 @@ public class Image {
      * méthode qui parcours chaque pixel d'une image et les mets dans un vecteur
      * @return vecteur avec chaque composante qui correspont à un pixel
      */
-    Vector getPixels() throws IOException {
+    public Vector getPixels() throws IOException {
 
 
         //reading the image

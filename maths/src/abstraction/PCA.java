@@ -39,7 +39,7 @@ public class PCA {
 	private final String sourceDir;
 	private final int maxIndividualsToLoad;
 	private final boolean writeDebugImages;
-	private final static String defaultSourceDir = "data_filtred/train";
+	private final static String defaultSourceDir = "data_filtred3/train";
 	private final static String filename = ".PCAsave";
 	private final static double keptInertiaThreshold = 0.85;
 	private final static int maxPowerIterations = 100;
@@ -750,6 +750,35 @@ public class PCA {
 		}
 
 		throw new IOException("cannot access '" + path + "': No such file or directory");
+	}
+
+	public Matrix getEigenfaces() {
+		return eigenfaces;
+	}
+
+	public Vector getPixelMeans() {
+		return pixelMeans;
+	}
+
+	public Map<String, String> getLabelToImagePath() {
+		Map<String, String> result = new LinkedHashMap<>();
+		for (Image img : images) {
+			result.putIfAbsent(img.getLabel(), img.getPathToImage());
+		}
+		return result;
+	}
+
+	public void setNumberOfKeptAxes(int userAxes) {
+		int available = maxNbOfKeptAxes > 0 ? maxNbOfKeptAxes : numberOfKeptAxes;
+		int maxEffective = Math.max(0, available - skippedLeadingAxes);
+		if (maxEffective == 0) return;
+		int clamped = Math.max(1, Math.min(userAxes, maxEffective));
+		this.numberOfKeptAxes = skippedLeadingAxes + clamped;
+	}
+
+	public int getMaxNumberOfKeptAxes() {
+		int available = maxNbOfKeptAxes > 0 ? maxNbOfKeptAxes : numberOfKeptAxes;
+		return Math.max(0, available - skippedLeadingAxes);
 	}
 
 	public static void main(String[] args) throws IOException {
