@@ -16,9 +16,9 @@ public class TestGraph extends Application {
 		LineChart<String, Number> monGraphique = varianceGraph.generateVarianceGraph();
 	
 		
-		FacesGraph facesGraph = new FacesGraph();
+		/*FacesGraph facesGraph = new FacesGraph();
 		ScatterChart<Number, Number> monGraphique2 = facesGraph.generateFacesGraph();
-		
+		*/
 
 		
 		

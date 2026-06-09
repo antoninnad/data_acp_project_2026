@@ -372,6 +372,13 @@ public class PCA {
 		return Math.max(0, this.numberOfKeptAxes - getSkippedLeadingAxes());
 	}
 
+	/**
+	 * Getter for the keptInertiaThreshold attribute
+	 * @return Returns the inertia threshold
+	 */
+	public static double getKeptinertiathreshold() {
+		return keptInertiaThreshold;
+	}
 
 	/**
 	 * Getter for the projectedFaces attribute
