@@ -5,6 +5,7 @@ module maths {
     requires javafx.controls;
     requires javafx.graphics;
     requires javafx.fxml;
+
     
     // Configuration pour le package 'app'
     exports app;
@@ -16,4 +17,6 @@ module maths {
     
     // Ouvre les autres packages au cas où
     opens abstraction to javafx.fxml;
+}
+    exports app to javafx.graphics;
 }

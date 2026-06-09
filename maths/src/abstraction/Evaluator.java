@@ -17,8 +17,8 @@ public class Evaluator {
 
     private static final String TESTING_DIR = "data_filtred3/test";
     private static final String TRAINING_DIR = "data_filtred3/train";
-    private static final int MAX_INDIVIDUALS_FOR_TRAINING = 15;
-    private static final int MAX_UNKNOWN_INDIVIDUALS_FOR_TEST = 20;
+    private static final int MAX_INDIVIDUALS_FOR_TRAINING = 30;
+    private static final int MAX_UNKNOWN_INDIVIDUALS_FOR_TEST = 10;
     private static final double DEFAULT_THRESHOLD = 0.10;
     private PCA pca;
     private Map<String, List<Vector>> dataBase;
@@ -104,6 +104,12 @@ public class Evaluator {
             double accuracy = total == 0 ? 0.0 : (double) knownCorrect / total;
             double discriminationRate = total == 0 ? 0.0 : (double) nearestLabelCorrect / total;
             double openSetAccuracy = total + unknownTotal == 0 ? 0.0 : (double) (knownCorrect + unknownRejected) / (total + unknownTotal);
+            int predictedKnownTotal = knownCorrect + knownMisclassified + unknownAccepted;
+            double precision = predictedKnownTotal == 0 ? 0.0 : (double) knownCorrect / predictedKnownTotal;
+            double recall = total == 0 ? 0.0 : (double) knownCorrect / total;
+            double f1Score = precision + recall == 0.0
+                    ? 0.0
+                    : 2.0 * precision * recall / (precision + recall);
 
 
             System.out.println("Evaluation terminee : " + (total + unknownTotal) + " images testees depuis " + resolveExistingDirectory(TESTING_DIR));
@@ -123,6 +129,9 @@ public class Evaluator {
             System.out.printf(Locale.US, "accuracy=%.2f%%%n", accuracy * 100.0);
             System.out.printf(Locale.US, "discriminationRate=%.2f%%%n", discriminationRate * 100.0);
             System.out.printf(Locale.US, "openSetAccuracy=%.2f%%%n", openSetAccuracy * 100.0);
+            System.out.printf(Locale.US, "precision=%.2f%%%n", precision * 100.0);
+            System.out.printf(Locale.US, "recall=%.2f%%%n", recall * 100.0);
+            System.out.printf(Locale.US, "f1Score=%.2f%%%n", f1Score * 100.0);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
