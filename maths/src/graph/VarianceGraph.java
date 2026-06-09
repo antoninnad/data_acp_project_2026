@@ -21,6 +21,14 @@ public class VarianceGraph {
 		this.eigensumThreshold = PCA.getKeptinertiathreshold() * 100;
 	}
 
+	
+	/**
+	 * Generate a graph with the cumulative variance depending on the number of axes 
+	 * 
+	 * @return graph with cumulative variance and the inertia threshold
+	 * 
+	 * */
+	
 	public LineChart<String, Number> generateVarianceGraph() {
 		Vector eigenvaluesVector = pca.getEigenValues();
 		double total = 0;
@@ -45,7 +53,7 @@ public class VarianceGraph {
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         series.setName("cumulative variance");
 		
-
+        //calculate the sum and add to the serie
         for (int i = 0; i < maxNumberAxes; i++) {
             String axeName = "axe" + (i + 1);
             namesOfAxes[i] = axeName;
