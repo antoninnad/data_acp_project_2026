@@ -283,8 +283,8 @@ public class Matrix {
 
 	/**
 	 * Norms the given columns of the Matrix (of RealMatrix) to 1
-	 * @param start Index of the column where to start norming
-	 * @param end Index of the column where to stop norming
+	 * @param start Column where to start norming
+	 * @param end Column where to stop norming
 	 * */
 	public void normColumns(int start, int end) throws OutOfRangeException {
     	for (int i=start; i<=end; i++) {

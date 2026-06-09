@@ -653,26 +653,31 @@ public class PCA {
 	 */
 	public void saveToFile() {
 		try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
-			// 1. Save the number of axes kept
+			//Save the number of axes kept
 			writer.println(this.numberOfKeptAxes);
+			writer.println();
 
-			// 2. Save the mean face 
+			//Save the mean face
 			writer.println(this.meanFace.getDimension());
 			for (int i = 0 ; i < this.meanFace.getDimension() ; i++) {
-				writer.print(this.meanFace.get(i) + " "); 
+				writer.println(this.meanFace.get(i) + " ");
+
 			}
 			writer.println();
 
-			// 3. Save the coordinates of the faces (projectedFaces)
+			//Save the coordinates of the faces
+			writer.println();
 			writer.println(this.projectedFaces.getNbRows() + " " + this.projectedFaces.getNbColumns());
 			for (int i = 0 ; i < this.projectedFaces.getNbRows(); i++ ) {
 				for (int j = 0; j < this.projectedFaces.getNbColumns(); j++) {
-					writer.print(this.projectedFaces.get(i,j) + " ");
+					writer.println(this.projectedFaces.get(i,j) + " ");
 				}
 				writer.println();
 			}
 
-			// 4. Save the eigenfaces
+			writer.println();
+
+			//Save the eigenfaces
 			writer.println(this.eigenfaces.getNbRows() + " " + this.eigenfaces.getNbColumns());
 			for (int i = 0; i < this.eigenfaces.getNbRows(); i++) {
 				for (int j = 0; j < this.eigenfaces.getNbColumns(); j++) {
@@ -683,7 +688,7 @@ public class PCA {
 			writer.println();
 			System.out.println("The informations concerning the PCA have been to " + filename);
 		} catch (IOException e) {
-			System.err.println("Error while trying to save the informations: " + e.getMessage());
+			System.err.println("Error while trying to save the informations" + e.getMessage());
 		}
 
 	}
@@ -692,9 +697,10 @@ public class PCA {
 	 * Loads the informations regarding the PCA to avoid recalculating too often
 	 */
 	public void loadFromFile() throws IOException {
-		File file = new File(filename);
-		if (!file.exists()) {
-			throw new FileNotFoundException("Save file not found: " + filename);
+		Scanner scanner = new Scanner(new BufferedReader(new FileReader(filename)));
+		if (scanner.hasNextInt()) {
+			//Load numberOfKeptAxes (int)
+			this.numberOfKeptAxes = scanner.nextInt();
 		}
 
 		//Load dimension of vector mean face and the values
