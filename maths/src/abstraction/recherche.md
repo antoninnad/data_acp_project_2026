@@ -64,7 +64,7 @@ Il est ensuite borné par un plancher et un plafond :
 $$
 \zeta_{\text{final}}
 =
-\min\left(0{,}31,\max\left(\zeta,\zeta_{\min}\right)\right)
+\min\left(0{,}30,\max\left(\zeta,\zeta_{\min}\right)\right)
 $$
 
 Avec le constructeur par défaut `new Query()`, le plancher vaut :

@@ -74,7 +74,7 @@ Ce seuil est :
 
 - limité par un plancher de `0,01` dans l'interface graphique ;
 - limité par un plancher de `0,10` dans l'évaluateur ;
-- plafonné à `0,31`.
+- plafonné à `0,30`.
 
 Parmi les individus qui respectent leur propre seuil, le programme retourne celui
 dont l'image d'entraînement est la plus proche. Si aucun seuil n'est respecté, le
@@ -197,9 +197,9 @@ java -cp maths/target/classes abstraction.Evaluator
 
 L'évaluateur actuel :
 
-- entraîne l'ACP sur les 25 premières identités disponibles ;
+- entraîne l'ACP sur les 30 premières identités disponibles ;
 - évalue trois images par identité connue ;
-- ajoute jusqu'à 20 identités inconnues ;
+- ajoute jusqu'à 10 identités inconnues ;
 - utilise un seuil minimal de `0,10` ;
 - affiche les erreurs de classification et les métriques finales.
 
