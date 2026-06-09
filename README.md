@@ -10,6 +10,31 @@ rejeter une image lorsque personne dans la base ne lui ressemble suffisamment.
 
 Ce projet a été réalisé dans un cadre académique à CY Tech.
 
+## Résultats clés
+
+Évaluation réalisée avec 30 individus connus, soit 90 images connues, et 27 images
+appartenant à des individus absents de la base d'entraînement.
+
+| Métrique | Résultat |
+| --- | ---: |
+| Précision des prédictions connues | **98,67 %** |
+| F1-score | **89,70 %** |
+| Taux de discrimination | **94,44 %** |
+| Exactitude en contexte ouvert | **85,47 %** |
+| Exactitude sur les individus connus | **82,22 %** |
+
+Points notables :
+
+- **aucune mauvaise identité attribuée** parmi les individus connus ;
+- **26 inconnus correctement rejetés sur 27** ;
+- une seule image inconnue acceptée à tort ;
+- 74 images connues correctement reconnues sur 90 ;
+- 16 images connues rejetées, ce qui constitue la principale source d'erreur.
+
+Ces résultats montrent que le modèle est très fiable lorsqu'il accepte une
+identité. Son principal axe d'amélioration concerne le rappel : certains visages
+connus sont encore rejetés par leur seuil personnalisé.
+
 ## Fonctionnalités
 
 - chargement d'une base d'images organisée par identité ;
