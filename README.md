@@ -197,7 +197,7 @@ java -cp maths/target/classes abstraction.Evaluator
 
 L'évaluateur actuel :
 
-- entraîne l'ACP sur les 15 premières identités disponibles ;
+- entraîne l'ACP sur les 25 premières identités disponibles ;
 - évalue trois images par identité connue ;
 - ajoute jusqu'à 20 identités inconnues ;
 - utilise un seuil minimal de `0,10` ;
@@ -214,6 +214,21 @@ Les principales métriques sont :
 | `knownMisclassified` | personnes connues associées à une mauvaise identité |
 | `unknownAccepted` | personnes inconnues acceptées à tort |
 | `unknownRejected` | personnes inconnues correctement rejetées |
+| `precision` | proportion de prédictions connues qui correspondent à la bonne identité |
+| `recall` | proportion d'images connues correctement reconnues |
+| `f1Score` | moyenne harmonique entre la précision et le rappel |
+
+Pour ces trois dernières métriques, la reconnaissance correcte d'une identité
+connue est considérée comme la classe positive :
+
+```text
+precision = knownCorrect
+            / (knownCorrect + knownMisclassified + unknownAccepted)
+
+recall = knownCorrect / knownEvaluated
+
+f1Score = 2 x precision x recall / (precision + recall)
+```
 
 Les résultats dépendent du contenu du dataset, du nombre d'axes calculés et des
 seuils présents dans le code. Le README ne conserve donc pas de score fixe qui
