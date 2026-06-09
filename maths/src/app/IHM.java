@@ -3,6 +3,7 @@ package app;
 import abstraction.Image;
 import abstraction.PCA;
 import abstraction.Query;
+import graph.VarianceGraph;
 import math.Matrix;
 import math.Vector;
 
@@ -64,6 +65,7 @@ public class IHM extends Application {
     private Button applyAxesButton;
     private ImageView averageFaceView;
     private FlowPane eigenfacesPane;
+    private Tab cumulativeEigenvaluesTab;
 
     private File selectedFile;
 
@@ -249,7 +251,15 @@ public class IHM extends Application {
         eigenScroll.setFitToWidth(true);
         eigenTab.setContent(eigenScroll);
 
-        tabs.getTabs().addAll(avgTab, eigenTab);
+        cumulativeEigenvaluesTab = new Tab("Cumulative Eigenvalues");
+        cumulativeEigenvaluesTab.setClosable(false);
+        Label placeholder = new Label("Chargement de la base...");
+        placeholder.setStyle("-fx-text-fill: #aaaaaa; -fx-font-style: italic;");
+        StackPane phPane = new StackPane(placeholder);
+        phPane.setStyle("-fx-background-color: #f7f7f7;");
+        cumulativeEigenvaluesTab.setContent(phPane);
+
+        tabs.getTabs().addAll(avgTab, eigenTab, cumulativeEigenvaluesTab);
         return tabs;
     }
 
@@ -319,7 +329,20 @@ public class IHM extends Application {
         axesField.setText(String.valueOf(pca.getNumberOfKeptAxes()));
         updateStats();
         loadVisuals();
+        loadVarianceGraph();
         setStatus("Base chargée — " + pca.getNumberOfKeptAxes() + " axes retenus", false);
+    }
+
+    private void loadVarianceGraph() {
+        try {
+            VarianceGraph vg = new VarianceGraph(pca);
+            ScrollPane scroll = new ScrollPane(vg.generateVarianceGraph());
+            scroll.setFitToWidth(true);
+            scroll.setFitToHeight(true);
+            cumulativeEigenvaluesTab.setContent(scroll);
+        } catch (Exception ex) {
+            System.err.println("[IHM] variance graph : " + ex.getMessage());
+        }
     }
 
     // ── Statistiques ──────────────────────────────────────────────────────────
@@ -368,6 +391,7 @@ public class IHM extends Application {
                     Image.centeredVectorToImage(face, tmp.getAbsolutePath());
                 }
                 averageFaceView.setImage(new javafx.scene.image.Image(tmp.toURI().toString()));
+                averageFaceView.setRotate(90);
             }
         } catch (Exception ex) {
             System.err.println("[IHM] visage moyen : " + ex.getMessage());
@@ -389,6 +413,7 @@ public class IHM extends Application {
                         iv.setFitWidth(64);
                         iv.setFitHeight(64);
                         iv.setPreserveRatio(true);
+                        iv.setRotate(90);
 
                         Label lbl = new Label("EF " + (i + 1));
                         lbl.setStyle("-fx-font-size: 10px; -fx-text-fill: #555555;");

@@ -10,14 +10,24 @@ import javafx.scene.chart.XYChart;
 
 public class VarianceGraph {
 	private PCA pca;
-	private double sum=0.0;
-	private int maxNumberAxes = pca.getMaxNumberOfKeptAxes() ;
-	private String[] namesOfAxes = new String[maxNumberAxes]; 
-	private double eigensumThreshold = PCA.getKeptinertiathreshold()*100;
+	private int maxNumberAxes;
+	private String[] namesOfAxes;
+	private double eigensumThreshold;
 
-	
+	public VarianceGraph(PCA pca) {
+		this.pca = pca;
+		this.maxNumberAxes = pca.getMaxNumberOfKeptAxes();
+		this.namesOfAxes = new String[maxNumberAxes];
+		this.eigensumThreshold = PCA.getKeptinertiathreshold() * 100;
+	}
+
 	public LineChart<String, Number> generateVarianceGraph() {
 		Vector eigenvaluesVector = pca.getEigenValues();
+		double total = 0;
+		for (int i = 0; i < eigenvaluesVector.getDimension(); i++) {
+			total += Math.max(0, eigenvaluesVector.get(i));
+		}
+		double sum = 0.0;
 		
 		//definitions of the x-axis 
 		CategoryAxis xAxis = new CategoryAxis();
@@ -39,7 +49,7 @@ public class VarianceGraph {
         for (int i = 0; i < maxNumberAxes; i++) {
             String axeName = "axe" + (i + 1);
             namesOfAxes[i] = axeName;
-            sum+= eigenvaluesVector.get(i)*100;
+            sum += total > 0 ? Math.max(0, eigenvaluesVector.get(i)) / total * 100 : 0;
             //add values to the data series to stock them
             series.getData().add(new XYChart.Data<>(axeName, sum));
         }

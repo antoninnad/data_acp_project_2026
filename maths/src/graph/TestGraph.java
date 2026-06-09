@@ -12,8 +12,9 @@ public class TestGraph extends Application {
 	public void start(Stage primaryStage) throws Exception {
 		primaryStage.setTitle("Mon Graphique JavaFX");
 
-		VarianceGraph varianceGraph = new VarianceGraph();
-		LineChart<String, Number> monGraphique = varianceGraph.generateVarianceGraph();
+		// VarianceGraph nécessite une instance PCA — utiliser new VarianceGraph(pca)
+		// VarianceGraph varianceGraph = new VarianceGraph();
+		// LineChart<String, Number> monGraphique = varianceGraph.generateVarianceGraph();
 	
 		
 		/*FacesGraph facesGraph = new FacesGraph();
@@ -26,7 +27,7 @@ public class TestGraph extends Application {
 		
 		
         // 5. Configuration de la Scène et affichage dans le Stage
-        Scene scene = new Scene(monGraphique, 800, 600);
+        Scene scene = new Scene(new javafx.scene.layout.StackPane(), 800, 600);
         primaryStage.setScene(scene);
         primaryStage.show();
 		
