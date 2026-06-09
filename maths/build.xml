@@ -22,10 +22,10 @@
 	<target name="create_run_jar" depends="build">
         <jar destfile="${dir.jarfile}/${jarfile}" filesetmanifest="mergewithoutmain">
             <manifest>
-                <attribute name="Main-Class" value="abstraction.PCA"/>
+                <attribute name="Main-Class" value="app.IHM"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
-            <fileset dir="bin"/>
+            <fileset dir="${dir.bindir}"/>
         </jar>
     </target>
 		
@@ -43,12 +43,17 @@
 	<target name="build" depends="clean">
 		<mkdir dir="${dir.bindir}" />
 		<echo message="Compiling java files" />
-		<javac srcdir="${dir.buildfile}/" destdir="${dir.bindir}" includeantruntime="false"/>
+		<javac srcdir="${dir.srcdir}" destdir="${dir.bindir}" includeantruntime="false">
+			<compilerarg value="--module-path"/>
+			<compilerarg value="${dir.libdir}"/>
+			<compilerarg value="--add-modules"/>
+			<compilerarg value="javafx.base,javafx.graphics,javafx.controls,javafx.fxml"/>
+		</javac>
 	</target>
 	
 	<!-- Run - executing the programm -->
 	
-	<target name="run" depends="build">
+	<target name="run" depends="create_run_jar">
 		<java jar="${dir.jarfile}/${jarfile}" fork="true">
 			<jvmarg value="--module-path"/>
 			<jvmarg value="${dir.libdir}"/>
@@ -61,7 +66,7 @@
 	<!-- Doc - generates the documentation -->
 	<target name="doc">
 		<mkdir dir="${dir.docdir}" />
-		<javadoc sourcepath="${dir.buildfile}/" destdir="${dir.docdir}">
+		<javadoc sourcepath="${dir.srcdir}" destdir="${dir.docdir}">
 			<fileset dir="${dir.buildfile}/src" defaultexcludes="yes">
 				<include name="**" />
 			</fileset>

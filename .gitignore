@@ -47,3 +47,4 @@ Celeba_HQ_facial_identity_dataset/
 ./bin
 ./maths/.classpath
 ./maths/.project
+debug/visages/*
