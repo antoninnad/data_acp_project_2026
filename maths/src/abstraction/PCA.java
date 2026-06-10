@@ -133,7 +133,7 @@ public class PCA {
 			// Creating the .jpg images associated to centred faces
 			if (writeDebugImages) {
 				new File("debug/visages").mkdirs();
-				Image.centeredVectorToImage(meanFace, "debug/meanface.jpg");
+				Image.toImage(pixelMeans, "debug/meanface.jpg");
 				for (int i=0; i<facesCoordinates.getNbColumns(); i++) {
 					Image.centeredVectorToImage(facesCoordinates.getColumn(i), "debug/visages/" + i + ".jpg");
 				}
