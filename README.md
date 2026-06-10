@@ -191,23 +191,28 @@ La librairie n'a pas été incluse sur le dépôt GitHub pour éviter le téléc
 
 
 ## Compilation
-Déplacez-vous dans le répertoire [`data_acp_project_2026/maths`](data_acp_project_2026/maths) puis lancer la commande suivante :
+Déplacez-vous dans le répertoire [`data_acp_project_2026/maths`](data_acp_project_2026/maths) puis lancer une des commandes suivantes :
+
 ```bash
 ant run
 ```
-La compilation devrait se lancer et prendre quelques seconde. L'application se lancera juste après.
+La compilation se lance, avec quelques warning dus à l'utilisation d'objets dépréciés, et va prendre quelques secondes. L'application se lance dans la foulée.
 
 
+```bash
+ant evaluate
+```
+Cette command vous permet de compiler le programme en utilisant un autre point d'entrée qui va permettre d'afficher un certain nombre de mesures et de résultats réalisés avec les bases `test` et `train`.
 
-A titre informatif, la classe de lancement est `app.IHM`.
+Vous pouvez également générer la documentation associée (Javadoc) via la commande suivante :
+```bash
+ant doc
+```
+
 
 ### Évaluation
 
-Après compilation :
-
-```bash
-java -cp maths/target/classes abstraction.Evaluator
-```
+Cette partie décrit plus précisément les résultats obtenus lors de l'exécution de la commande `ant evaluate`.
 
 L'évaluateur actuel :
 
