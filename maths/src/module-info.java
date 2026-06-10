@@ -1,20 +1,20 @@
 module maths {
-    // Modules requis
+    // Required modules
     requires java.desktop;
     requires javafx.base;
     requires javafx.controls;
     requires javafx.graphics;
     requires javafx.fxml;
     
-    // Configuration pour le package 'app'
+    // Configuration for the package 'app'
     exports app;
     opens app to javafx.graphics, javafx.fxml;
     
-    // Configuration pour le package 'graph'
+    // Configuration for the package 'graph'
     exports graph;
     opens graph to javafx.graphics, javafx.fxml;
     
-    // Configuration pour le package 'abstraction'
+    // Configuration for the package 'abstraction'
     exports abstraction;
     opens abstraction to javafx.graphics, javafx.fxml;
     
