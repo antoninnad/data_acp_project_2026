@@ -187,11 +187,11 @@ Préparation :
 1. Télécharger les fichiers du dépôt GitHub (avec une clonage ou via une archive .zip).
 2. Si besoin, télécharger JavaFX via le lien suivant https://gluonhq.com/products/javafx/.
 La librairie n'a pas été incluse sur le dépôt GitHub pour éviter le téléchargement de la librairie si celui-ci n'est pas nécessaire.
-3. Copier le dossier openjfx-**.*.**_linux-x64_bin-sdk/javafx-sdk-**.*.**/lib de l'archive JavaFX dans le répertoire [`data_acp_project_2026/maths`]data_acp_project_2026/maths
+3. Copier le dossier openjfx-**.*.**_linux-x64_bin-sdk/javafx-sdk-**.*.**/lib de l'archive JavaFX dans le répertoire [`data_acp_project_2026/maths`](data_acp_project_2026/maths)
 
 
 ## Compilation
-Déplacez-vous dans le répertoire [`data_acp_project_2026/maths`]data_acp_project_2026/maths puis lancer la commande suivante :
+Déplacez-vous dans le répertoire [`data_acp_project_2026/maths`](data_acp_project_2026/maths) puis lancer la commande suivante :
 ```bash
 ant run
 ```
