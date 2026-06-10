@@ -175,42 +175,31 @@ Jeu de données : AT&T Laboratories Cambridge, “The Database of Faces” / Oli
 ## Prérequis
 
 - Java 21 ;
-- Maven 3 ;
-- un environnement graphique pour utiliser l'interface JavaFX.
+- un environnement graphique pour utiliser l'interface JavaFX ;
 
 Vérification :
 
 ```bash
 java --version
-mvn --version
 ```
+
+Préparation :
+1. Télécharger les fichiers du dépôt GitHub (avec une clonage ou via une archive .zip).
+2. Si besoin, télécharger JavaFX via le lien suivant https://gluonhq.com/products/javafx/.
+La librairie n'a pas été incluse sur le dépôt GitHub pour éviter le téléchargement de la librairie si celui-ci n'est pas nécessaire.
+3. Copier le dossier openjfx-**.*.**_linux-x64_bin-sdk/javafx-sdk-**.*.**/lib de l'archive JavaFX dans le répertoire [`data_acp_project_2026/maths`]data_acp_project_2026/maths
+
 
 ## Compilation
-
-Toutes les commandes suivantes doivent être exécutées depuis la racine du dépôt.
-
+Déplacez-vous dans le répertoire [`data_acp_project_2026/maths`]data_acp_project_2026/maths puis lancer la commande suivante :
 ```bash
-mvn -pl maths compile
+ant run
 ```
+La compilation devrait se lancer et prendre quelques seconde. L'application se lancera juste après.
 
-Les classes compilées sont générées dans :
 
-```text
-maths/target/classes
-```
 
-Les dépendances JavaFX sont téléchargées automatiquement par Maven lors de la
-première compilation.
-
-## Lancement
-
-### Interface graphique
-
-```bash
-mvn -pl maths compile exec:java
-```
-
-La classe principale configurée est `app.IHM`.
+A titre informatif, la classe de lancement est `app.IHM`.
 
 ### Évaluation
 
