@@ -19,6 +19,8 @@
 		</fileset>
 	</path>
 	
+	
+	<!-- Creating the JAR archive for run command -->	
 	<target name="create_run_jar" depends="build">
         <jar destfile="${dir.jarfile}/${jarfile}" filesetmanifest="mergewithoutmain">
             <manifest>
@@ -28,10 +30,21 @@
             <fileset dir="${dir.bindir}"/>
         </jar>
     </target>
+
+	
+	<!-- Creating the JAR archive for test command -->	
+	<target name="create_evaluate_jar" depends="build">
+        <jar destfile="${dir.jarfile}/${jarfile}" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="abstraction.Evaluator"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="${dir.bindir}"/>
+        </jar>
+    </target>
 		
 
 	<!-- Delete files -->
-	
 	<target name="clean">
 		<delete dir="${dir.bindir}"/>
 		<delete dir="${dir.docdir}"/>		
@@ -39,7 +52,6 @@
 	
 	
 	<!-- Build - compiling the files -->
-	
 	<target name="build" depends="clean">
 		<mkdir dir="${dir.bindir}" />
 		<echo message="Compiling java files" />
@@ -50,10 +62,21 @@
 			<compilerarg value="javafx.base,javafx.graphics,javafx.controls,javafx.fxml"/>
 		</javac>
 	</target>
+
 	
 	<!-- Run - executing the programm -->
-	
 	<target name="run" depends="create_run_jar">
+		<java jar="${dir.jarfile}/${jarfile}" fork="true">
+			<jvmarg value="--module-path"/>
+			<jvmarg value="${dir.libdir}"/>
+			<jvmarg value="--add-modules"/>
+			<jvmarg value="javafx.base,javafx.graphics,javafx.controls,javafx.fxml"/>
+		</java>
+	</target>
+
+	
+	<!-- Evaluate - executing the programm -->
+	<target name="evaluate" depends="create_evaluate_jar">
 		<java jar="${dir.jarfile}/${jarfile}" fork="true">
 			<jvmarg value="--module-path"/>
 			<jvmarg value="${dir.libdir}"/>
