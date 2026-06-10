@@ -5,12 +5,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Utility class for bulk-loading and converting dataset images from disk.
+ *
+ * <p>Each image found under {@code sourceDir} is converted to a 64×64 greyscale JPEG
+ * and wrapped in an {@link Image} object. Person identity is derived from the name of
+ * the containing sub-folder.</p>
+ *
+ * @see Image
+ */
 public class ImageLoader {
 
     /**
-     * convert a directory to 64x64 and grey scale
-     * return the directory as a list converted
-     * @param sourceDir source directory (ex: "./Celeba_HQ_facial_identity_dataset/train")
+     * Loads all images from a dataset directory, converting each to 64×64 greyscale.
+     * Sub-folders whose names cannot be parsed as a person identifier are skipped.
+     *
+     * @param sourceDir root directory containing one sub-folder per person
+     *                  (e.g. {@code "./Celeba_HQ_facial_identity_dataset/train"})
+     * @return list of converted {@link Image} objects, one per image file found
+     * @throws IOException if {@code sourceDir} does not exist or cannot be read
      */
     public static List<Image> loadFromDirectory(String sourceDir) throws IOException {
         File root = new File(sourceDir);

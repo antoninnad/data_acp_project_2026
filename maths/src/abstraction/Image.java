@@ -14,6 +14,20 @@ import javax.imageio.ImageIO;
 import math.Matrix;
 import math.Vector;
 
+/**
+ * Represents a single face image loaded from disk and converted to a flat greyscale pixel vector.
+ *
+ * <p>Images from the CelebA-HQ dataset (178×218) are automatically cropped to a
+ * 128×128 square centred on the face and then scaled down to 64×64 pixels, producing
+ * a 4096-component vector compatible with {@link PCA}. Images that are already at the
+ * target resolution are used as-is.</p>
+ *
+ * <p>Static utility methods allow converting a pixel vector back to a JPEG file:
+ * {@link #toImage} for raw [0-255] vectors and {@link #centeredVectorToImage} for
+ * centred PCA vectors whose values can be negative.</p>
+ *
+ * @see PCA
+ */
 public class Image {
 
     private static final int CELEBA_RAW_WIDTH = 178;
@@ -28,20 +42,41 @@ public class Image {
     String label;
     Vector data;
 
+    /**
+     * Constructs an Image directly from an existing pixel vector (no file I/O).
+     * Intended for unit tests and internal use.
+     *
+     * @param data pixel vector representing the image
+     */
     Image(Vector data) {
         this.data = data;
     }
 
+    /**
+     * Returns the raw pixel vector stored in this image.
+     *
+     * @return pixel vector, or {@code null} if {@link #getPixels()} has not been called yet
+     */
     Vector getVector() {
         return data;
     }
 
+    /**
+     * Replaces the pixel vector stored in this image.
+     *
+     * @param data new pixel vector
+     */
     void setVector(Vector data) {
         this.data = data;
     }
 
     /**
-     * @param pathToImage path to the dataset that we want to use
+     * Constructs an Image from a file on disk.
+     * The file is not read immediately; pixels are loaded lazily via {@link #getPixels()}.
+     *
+     * @param pathToImage absolute or relative path to the image file (JPG or PNG)
+     * @param label       identity label of the person shown in the image (e.g. "018")
+     * @throws FileNotFoundException if the file does not exist at the given path
      */
     public Image(String pathToImage, String label) throws FileNotFoundException {
 
@@ -56,11 +91,11 @@ public class Image {
     }
 
     /**
-     * to get numbe of pixel
-     * @return number of pixel
-     * @throws IOException exception lauch by ImageIo
+     * Returns the total number of pixels in the prepared (cropped and resized) image.
+     *
+     * @return width × height of the prepared image
+     * @throws IOException if the image file cannot be read
      */
-
     int getNumberOfPixel() throws IOException {
         BufferedImage image = readPreparedImage();
 
@@ -71,22 +106,22 @@ public class Image {
     }
 
     /**
-     * méthode qui parcours chaque pixel d'une image et les mets dans un vecteur
-     * @return vecteur avec chaque composante qui correspont à un pixel
+     * Reads the image from disk, applies the CelebA-HQ crop and resize if needed,
+     * and returns a flat greyscale pixel vector in row-major order.
+     * Each component is the average of the R, G, B channels in [0.0, 255.0].
+     *
+     * @return flat pixel vector of length width × height (4096 for a 64×64 image)
+     * @throws IOException if the image file cannot be read
      */
     public Vector getPixels() throws IOException {
 
-
-        //reading the image
         BufferedImage image = readPreparedImage();
 
         int width = image.getWidth();
         int heigth = image.getHeight();
 
-        //for example if image is 10x10 we have 100 pixels
         this.data = new Vector(width * heigth);
 
-        // to obtain a vector with all the coposante represanting a pixel of image
         for (int y = 0; y < heigth; y++) {
             for (int x = 0; x < width; x++) {
                 int rgb = image.getRGB(x, y);
@@ -96,17 +131,20 @@ public class Image {
                 double bleu = rgb & 0xFF;
 
                 data.set(y * width + x, (rouge + vert + bleu) / 3);
-
-
             }
         }
-
-
 
         return data;
 
     }
 
+    /**
+     * Reads the image file and applies the CelebA-HQ crop and resize when the
+     * raw dimensions match the expected 178×218 format.
+     *
+     * @return prepared BufferedImage ready for pixel extraction
+     * @throws IOException if the file cannot be decoded
+     */
     private BufferedImage readPreparedImage() throws IOException {
         BufferedImage image = ImageIO.read(new File(this.pathToImage));
 
@@ -127,10 +165,24 @@ public class Image {
         return image;
     }
 
+    /**
+     * Checks whether the image has the raw CelebA-HQ dimensions (178×218).
+     *
+     * @param image image to inspect
+     * @return {@code true} if the image is an unprocessed CelebA-HQ file
+     */
     private boolean isRawCelebAImage(BufferedImage image) {
         return image.getWidth() == CELEBA_RAW_WIDTH && image.getHeight() == CELEBA_RAW_HEIGHT;
     }
 
+    /**
+     * Scales a BufferedImage to the requested dimensions using bilinear interpolation.
+     *
+     * @param source source image to scale
+     * @param width  target width in pixels
+     * @param height target height in pixels
+     * @return a new greyscale BufferedImage at the requested size
+     */
     private BufferedImage resize(BufferedImage source, int width, int height) {
         BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
         Graphics2D graphics = resized.createGraphics();
@@ -143,22 +195,39 @@ public class Image {
     }
 
     /**
-     * setter to set the label of picture for example 18 for face that have the id 18
-     * @param label
+     * Sets the identity label of this image.
+     *
+     * @param label numeric string identifying the person (e.g. "018")
      */
-
     public void setLabel(String label) {
         this.label = label;
     }
 
+    /**
+     * Returns the identity label of this image.
+     *
+     * @return numeric string identifying the person shown in the image
+     */
     public String getLabel() {
         return label;
     }
 
+    /**
+     * Returns the file path used to load this image.
+     *
+     * @return absolute or relative path to the source image file
+     */
     public String getPathToImage() {
         return pathToImage;
     }
 
+    /**
+     * Extracts a numeric label from a dataset folder name.
+     * Accepts bare integer folders ("018") and "personne_NNN" folders.
+     *
+     * @param folderName name of the folder to parse
+     * @return the numeric label as a string, or an empty string if the format is not recognised
+     */
     static String labelFromFolderName(String folderName) {
         if (folderName.matches("\\d+")) {
             return folderName;
@@ -172,8 +241,9 @@ public class Image {
     }
 
     /**
-     * return just the label
-     * @return
+     * Returns a short string representation of this image showing its label.
+     *
+     * @return the identity label of the image
      */
     @Override
     public String toString() {
@@ -181,12 +251,14 @@ public class Image {
     }
 
     /**
-     * Vector to image jpeg
-     * @param imgVectorized
-     * @param pathToSave
-     * @throws IOException
+     * Writes a raw pixel vector (values in [0, 255]) to a square JPEG file.
+     * Values outside [0, 255] are clamped. The image side length is inferred
+     * from the square root of the vector dimension.
+     *
+     * @param imgVectorized flat greyscale pixel vector (length must be a perfect square)
+     * @param pathToSave    destination file path (e.g. "debug/face.jpg")
+     * @throws IOException if the file cannot be written
      */
-
     public static void toImage(Vector imgVectorized, String pathToSave) throws IOException {
 
         int dimension = Math.toIntExact(Math.round(Math.sqrt(imgVectorized.getDimension())));
@@ -196,13 +268,11 @@ public class Image {
                 BufferedImage.TYPE_BYTE_GRAY
         );
 
-        //set pixel by pixel
         for (int y = 0; y < dimension; y++) {
             for (int x = 0; x < dimension; x++) {
 
                 int index = y * dimension + x;
 
-                //grey to 0 to 255
                 int grey = (int) Math.round(imgVectorized.get(index));
 
                 if (grey < 0) {
@@ -219,13 +289,19 @@ public class Image {
             }
         }
 
-        //saving
-
         ImageIO.write(image, "jpg", new File(pathToSave));
-
 
     }
 
+    /**
+     * Writes a centred PCA vector (values can be negative) to a square JPEG file.
+     * Pixel values are linearly normalised from [min, max] to [0, 255] so that the
+     * full dynamic range of the vector is visible.
+     *
+     * @param imgVectorized centred pixel vector produced by PCA (length must be a perfect square)
+     * @param pathToSave    destination file path (e.g. "debug/eigenfaces/eigen0.jpg")
+     * @throws IOException if the file cannot be written
+     */
     public static void centeredVectorToImage(Vector imgVectorized, String pathToSave) throws IOException {
         int dimension = Math.toIntExact(Math.round(Math.sqrt(imgVectorized.getDimension())));
 
@@ -273,15 +349,16 @@ public class Image {
     }
 
     /**
-     * Converts an image to 64x64 grayscale PNG format
-     * and saves it using the convention: person_XXX/img_YY.png
+     * Converts an image to 64×64 greyscale JPEG and saves it under a standardised
+     * folder/filename convention ({@code data_filtred/test/NNN/img_MM.jpg}).
      *
-     * @param inputPath   path to the source image
-     * @param personneId    person identifier (e.g. 1 → "001")
-     * @param imageNum    image number (e.g. 3 → "03")
-     * @return the converted and saved image file
+     * @param inputPath  path to the source image file
+     * @param personneId numeric person identifier (formatted as a zero-padded 3-digit folder name)
+     * @param imageNum   image sequence number within the person's folder (formatted as 2 digits)
+     * @return the converted and saved output file
+     * @throws IOException if the source image cannot be read or the output file cannot be written
      */
-    private static final String BASE_DIR = "../data_filtred/test";  // Base directory for converted images
+    private static final String BASE_DIR = "../data_filtred/test";
 
     public static File convertAndSave(String inputPath, int personneId, int imageNum) throws IOException {
 
@@ -299,23 +376,24 @@ public class Image {
         g2d.dispose();
 
         String personneFolder = String.format("%03d", personneId);
-        String fileName = String.format("img_%02d.jpg", imageNum);  // ← .jpg
+        String fileName = String.format("img_%02d.jpg", imageNum);
 
         File outputDir = new File(BASE_DIR + File.separator + personneFolder);
         if (!outputDir.exists()) outputDir.mkdirs();
 
         File output = new File(outputDir, fileName);
-        ImageIO.write(grayscale, "jpg", output);  // ← "jpg"
+        ImageIO.write(grayscale, "jpg", output);
 
-    return output;
-}
+        return output;
+    }
 
     /**
-     * only for test
-     * @param args
-     * @throws FileNotFoundException
+     * Simple smoke test that loads a CelebA image, extracts its pixel vector,
+     * and writes it back as a JPEG to verify the round-trip.
+     *
+     * @param args unused
+     * @throws FileNotFoundException if the hard-coded test image is not found
      */
-
     public static void main(String[] args) throws FileNotFoundException {
 
         boolean isOkay = true;
@@ -339,12 +417,17 @@ public class Image {
         }
     }
 
+    /**
+     * Projects the image's pixel vector into a new basis defined by the given
+     * change-of-basis matrix.
+     *
+     * @param changeOfBasis matrix whose rows are the new basis vectors
+     * @return the image's coordinates in the new basis
+     */
     Vector changingBaseImage(Matrix changeOfBasis) {
-
 
         Matrix matrixReduction = new Matrix(changeOfBasis.getNbRows(), 1);
 
-        //change of basis
         matrixReduction = changeOfBasis.multiply(data.VectorToMatrix());
 
         data = matrixReduction.matrixToVector();

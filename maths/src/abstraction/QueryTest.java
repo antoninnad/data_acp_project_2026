@@ -6,8 +6,22 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Unit tests for the {@link Query} class.
+ *
+ * <p>Each test method covers one scenario (constructor defaults, squared norm,
+ * best-match selection, empty database). All tests are run from {@link #main}
+ * and throw {@link AssertionError} on failure.</p>
+ *
+ * @see Query
+ */
 public class QueryTest {
 
+    /**
+     * Runs all unit tests in sequence and prints a success message when they all pass.
+     *
+     * @param args unused
+     */
     public static void main(String[] args) {
         testDefaultConstructor();
         testConstructorWithThreshold();

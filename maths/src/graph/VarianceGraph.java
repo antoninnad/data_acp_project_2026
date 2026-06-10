@@ -1,4 +1,4 @@
- package graph;
+package graph;
 
 import abstraction.PCA;
 import math.Vector;
@@ -8,12 +8,28 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 
 
+/**
+ * Generates a JavaFX line chart showing the cumulative variance explained by
+ * the PCA eigenfaces as a function of the number of retained axes.
+ *
+ * <p>The chart plots two series: the cumulative variance curve (in %) and a
+ * horizontal threshold line at the inertia target defined in {@link PCA}
+ * (default 85 %). The x-axis lists each axis from "axe1" to "axeN", and the
+ * y-axis shows the cumulative percentage of explained variance.</p>
+ *
+ * @see PCA
+ */
 public class VarianceGraph {
 	private PCA pca;
 	private int maxNumberAxes;
 	private String[] namesOfAxes;
 	private double eigensumThreshold;
 
+	/**
+	 * Constructs a VarianceGraph bound to an already-computed PCA model.
+	 *
+	 * @param pca trained PCA instance used to read eigenvalues and axis count
+	 */
 	public VarianceGraph(PCA pca) {
 		this.pca = pca;
 		this.maxNumberAxes = pca.getMaxNumberOfKeptAxes();
@@ -23,12 +39,11 @@ public class VarianceGraph {
 
 	
 	/**
-	 * Generate a graph with the cumulative variance depending on the number of axes 
-	 * 
-	 * @return graph with cumulative variance and the inertia threshold
-	 * 
-	 * */
-	
+	 * Builds and returns a JavaFX line chart with two series: the cumulative variance
+	 * curve and the acceptance threshold line.
+	 *
+	 * @return a {@code LineChart} ready to be embedded in a JavaFX scene
+	 */
 	public LineChart<String, Number> generateVarianceGraph() {
 		Vector eigenvaluesVector = pca.getEigenValues();
 		double total = 0;

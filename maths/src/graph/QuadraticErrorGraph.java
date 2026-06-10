@@ -9,6 +9,17 @@ import math.Matrix;
 import math.Vector;
 import java.util.Arrays;
 
+/**
+ * Generates a JavaFX line chart showing how the mean quadratic reconstruction error
+ * decreases as more PCA eigenfaces are used to reconstruct the training images.
+ *
+ * <p>For each number of axes i (from 1 to the total number of kept axes), the chart
+ * plots the average L2 norm of the difference between the original centred face vectors
+ * and their reconstruction using the first i kept eigenfaces. The curve is monotonically
+ * decreasing: more eigenfaces always produce a better reconstruction.</p>
+ *
+ * @see PCA
+ */
 public class QuadraticErrorGraph {
 	private PCA pca;
 	private int numberOfKeptAxes;
@@ -18,7 +29,10 @@ public class QuadraticErrorGraph {
 	private Matrix original;
 
 	/**
-	 * Generate a graph with the quadratic error
+	 * Constructs a QuadraticErrorGraph bound to an already-computed PCA model.
+	 * All required matrices are fetched from the model at construction time.
+	 *
+	 * @param pca trained PCA instance providing eigenfaces and face projections
 	 */
 	public QuadraticErrorGraph(PCA pca) {
 		this.pca = pca;
@@ -31,9 +45,11 @@ public class QuadraticErrorGraph {
 
 
 	/**
-	 * Generate a graph with the quadratic error
+	 * Builds and returns a JavaFX line chart showing the mean quadratic reconstruction
+	 * error for each number of kept axes from 1 to {@code numberOfKeptAxes}.
+	 * Must be called on the JavaFX Application Thread.
 	 *
-	 * @return graph with the quadratic error
+	 * @return a {@code LineChart} ready to be embedded in a JavaFX scene
 	 */
 	public LineChart<String, Number> generateQuadraticErrorGraph() {
 		int nbImages = original.getNbColumns();

@@ -52,6 +52,25 @@ import javafx.stage.Stage;
 
 import javax.imageio.ImageIO;
 
+/**
+ * Main JavaFX application window for the PCA-based face recognition system.
+ *
+ * <p>The interface is split into four zones in a 2×2 grid:</p>
+ * <ul>
+ *   <li><b>Top-left</b>  – query image selection and search button.</li>
+ *   <li><b>Top-right</b> – visualisation tabs (average face, eigenfaces,
+ *       cumulative eigenvalue chart, quadratic error chart).</li>
+ *   <li><b>Bottom-left</b> – recognition result (matched person and their image).</li>
+ *   <li><b>Bottom-right</b> – PCA parameters (number of kept axes, cumulative variance).</li>
+ * </ul>
+ *
+ * <p>The {@link PCA} model is built asynchronously on startup. The heavy quadratic error
+ * computation also runs on a background thread and updates the UI via
+ * {@link javafx.application.Platform#runLater}.</p>
+ *
+ * @see PCA
+ * @see Query
+ */
 public class IHM extends Application {
 
     private PCA pca;
@@ -75,6 +94,12 @@ public class IHM extends Application {
 
     private File selectedFile;
 
+    /**
+     * JavaFX entry point. Builds the scene graph, shows the window, and triggers
+     * asynchronous PCA initialisation.
+     *
+     * @param stage the primary window provided by the JavaFX runtime
+     */
     @Override
     public void start(Stage stage) {
         BorderPane root = new BorderPane();
@@ -95,6 +120,11 @@ public class IHM extends Application {
         initPcaAsync();
     }
 
+    /**
+     * Builds the top bar containing the menu and the status label.
+     *
+     * @return an {@code HBox} ready to be placed at the top of the root {@code BorderPane}
+     */
     private HBox buildTopBar() {
         HBox bar = new HBox(10);
         bar.setAlignment(Pos.CENTER_LEFT);
@@ -116,6 +146,11 @@ public class IHM extends Application {
         return bar;
     }
 
+    /**
+     * Builds the central 2×2 grid that contains all four functional zones of the UI.
+     *
+     * @return a {@code GridPane} with search, visuals, result, and parameter zones
+     */
     private GridPane buildCentre() {
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -159,6 +194,11 @@ public class IHM extends Application {
 
     // ── Zone saisie image ──────────────────────────────────────────────────────
 
+    /**
+     * Builds the top-left zone with the query image display, browse button, and search button.
+     *
+     * @return a {@code VBox} containing the image container and action buttons
+     */
     private VBox buildSearchZone() {
         VBox box = new VBox(8);
         box.setPadding(new Insets(10));
@@ -199,6 +239,11 @@ public class IHM extends Application {
 
     // ── Zone résultat ──────────────────────────────────────────────────────────
 
+    /**
+     * Builds the bottom-left zone that displays the matched person's name and a sample image.
+     *
+     * @return a {@code VBox} containing the result label and image view
+     */
     private VBox buildResultZone() {
         VBox box = new VBox(8);
         box.setPadding(new Insets(10));
@@ -231,6 +276,13 @@ public class IHM extends Application {
 
     // ── Onglets visualisations ─────────────────────────────────────────────────
 
+    /**
+     * Builds the top-right tab pane with four tabs: average face, eigenfaces,
+     * cumulative eigenvalue chart, and quadratic error chart.
+     * Chart tabs start with a placeholder until the PCA model is ready.
+     *
+     * @return a {@code TabPane} with all four visualisation tabs
+     */
     private TabPane buildVisualsTab() {
         TabPane tabs = new TabPane();
 
@@ -277,8 +329,12 @@ public class IHM extends Application {
         return tabs;
     }
 
-    // ── Zone paramètres ────────────────────────────────────────────────────────
-
+    /**
+     * Builds the bottom-right zone with the axes input field, apply button,
+     * and read-only statistics labels.
+     *
+     * @return a {@code VBox} containing the parameter controls
+     */
     private VBox buildParamZone() {
         VBox box = new VBox(10);
         box.setPadding(new Insets(10));
@@ -310,6 +366,11 @@ public class IHM extends Application {
 
     // ── Initialisation PCA ─────────────────────────────────────────────────────
 
+    /**
+     * Launches PCA initialisation on a daemon background thread.
+     * Disables the search and axes buttons during loading, then calls
+     * {@link #onPcaReady()} on the JavaFX thread when done.
+     */
     private void initPcaAsync() {
         if (searchButton     != null) searchButton.setDisable(true);
         if (applyAxesButton  != null) applyAxesButton.setDisable(true);
@@ -337,6 +398,11 @@ public class IHM extends Application {
         t.start();
     }
 
+    /**
+     * Called on the JavaFX thread once the PCA model has been fully initialised.
+     * Enables controls, updates statistics, loads visual elements, and triggers
+     * asynchronous chart generation.
+     */
     private void onPcaReady() {
         applyAxesButton.setDisable(false);
         if (selectedFile != null) searchButton.setDisable(false);
@@ -348,6 +414,12 @@ public class IHM extends Application {
         setStatus("Base chargée — " + pca.getNumberOfKeptAxes() + " axes retenus", false);
     }
 
+    /**
+     * Computes the quadratic reconstruction error on a background thread and
+     * builds the corresponding line chart on the JavaFX thread.
+     * Updates the content of {@link #quadraticErrorTab} when done, or shows
+     * an error label if the computation fails.
+     */
     private void loadQuadraticErrorGraph() {
         Thread t = new Thread(() -> {
             try {
@@ -406,6 +478,10 @@ public class IHM extends Application {
         t.start();
     }
 
+    /**
+     * Builds the cumulative eigenvalue chart synchronously (lightweight) and sets it
+     * as the content of {@link #cumulativeEigenvaluesTab}.
+     */
     private void loadVarianceGraph() {
         try {
             VarianceGraph vg = new VarianceGraph(pca);
@@ -420,6 +496,10 @@ public class IHM extends Application {
 
     // ── Statistiques ──────────────────────────────────────────────────────────
 
+    /**
+     * Refreshes the statistics labels in the parameter zone with the current
+     * number of kept axes and their cumulative explained variance.
+     */
     private void updateStats() {
         int n = pca.getNumberOfKeptAxes();
         int max = pca.getMaxNumberOfKeptAxes();
@@ -448,6 +528,11 @@ public class IHM extends Application {
 
     // ── Visualisations ────────────────────────────────────────────────────────
 
+    /**
+     * Loads and displays the average face and the first 20 eigenfaces in their
+     * respective tabs. Each image is written to a temporary JPEG and loaded into
+     * an {@code ImageView} rotated 90° to match the dataset orientation.
+     */
     private void loadVisuals() {
         // Visage moyen
         try {
@@ -506,6 +591,10 @@ public class IHM extends Application {
 
     // ── Recherche ─────────────────────────────────────────────────────────────
 
+    /**
+     * Opens a file chooser dialog, loads the selected image into the query image view,
+     * and enables the search button. Resets any previous search result.
+     */
     private void browseImage() {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Sélectionner une image");
@@ -525,6 +614,11 @@ public class IHM extends Application {
         }
     }
 
+    /**
+     * Projects the selected query image into the PCA eigenspace on a background thread
+     * and displays the matched person's label and image in the result zone.
+     * The search button is re-enabled once the result is available.
+     */
     private void lancerRecherche() {
         if (selectedFile == null || pca == null) return;
         searchButton.setDisable(true);
@@ -567,6 +661,15 @@ public class IHM extends Application {
         t.start();
     }
 
+    /**
+     * Reads a query image file and returns its pixel vector in the format expected by
+     * {@link PCA#projectVector}. If the image is already at the right size it is used
+     * directly; otherwise it is resized to the expected square side length.
+     *
+     * @param imageFile image file to read (JPG or PNG)
+     * @return flat greyscale pixel vector of the expected dimension
+     * @throws IOException if the file cannot be read or decoded
+     */
     private Vector getQueryPixels(File imageFile) throws IOException {
         // Image.getPixels() gère déjà le recadrage CelebA (178x218 → 64x64)
         Image img    = new Image(imageFile.getAbsolutePath(), "query");
@@ -604,6 +707,10 @@ public class IHM extends Application {
 
     // ── Paramètres ────────────────────────────────────────────────────────────
 
+    /**
+     * Reads the axes text field, validates the value, updates the PCA model, and
+     * refreshes the statistics labels. Shows an error dialog on invalid input.
+     */
     private void applyAxes() {
         if (pca == null) return;
         try {
@@ -625,11 +732,23 @@ public class IHM extends Application {
 
     // ── Utilitaires ───────────────────────────────────────────────────────────
 
+    /**
+     * Displays a modal error dialog with the given message.
+     *
+     * @param msg error message to show to the user
+     */
     private void showError(String msg) {
         Alert alert = new Alert(Alert.AlertType.ERROR, msg, ButtonType.OK);
         alert.showAndWait();
     }
 
+    /**
+     * Updates the status label text and style in the top bar.
+     *
+     * @param msg     message to display
+     * @param loading {@code true} to use the grey italic "loading" style,
+     *                {@code false} to use the normal dark style
+     */
     private void setStatus(String msg, boolean loading) {
         if (statusLabel == null) return;
         statusLabel.setText(msg);
@@ -638,6 +757,11 @@ public class IHM extends Application {
                 : "-fx-text-fill: #333333;");
     }
 
+    /**
+     * Application entry point. Prints the working directory and launches the JavaFX runtime.
+     *
+     * @param args command-line arguments (passed to the JavaFX launcher)
+     */
     public static void main(String[] args) {
         System.out.println("Le dossier racine est : " + System.getProperty("user.dir"));
         launch(args);

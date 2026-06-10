@@ -13,6 +13,20 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Evaluates the face recognition pipeline by running it against a labelled test set
+ * and printing a detailed confusion matrix.
+ *
+ * <p>The evaluator trains a {@link PCA} model on a fixed subset of individuals from
+ * the training directory, then classifies every image in the test directory using
+ * {@link Query}. It distinguishes between known individuals (present in the training
+ * set) and unknown ones, and reports accuracy, precision, recall, F1-score, and
+ * additional diagnostic counters (e.g. images rejected despite passing the threshold,
+ * images classified as the wrong person).</p>
+ *
+ * @see PCA
+ * @see Query
+ */
 public class Evaluator {
 
     private static final String TESTING_DIR = "data_filtred3/test";
@@ -26,7 +40,9 @@ public class Evaluator {
 
 
     /**
-     * to get information for the quality of acp
+     * Trains a {@link PCA} model on a fixed subset of individuals, classifies all images
+     * in the test directory, and prints a full confusion matrix together with accuracy,
+     * precision, recall, F1-score, and detailed rejection/misclassification counters.
      */
     public void getMatrixConfusion() {
 
@@ -143,6 +159,14 @@ public class Evaluator {
 
     }
 
+    /**
+     * Prints a one-line diagnostic for a misclassified image, showing expected and
+     * predicted labels, nearest-person label, and the relevant distances and threshold.
+     *
+     * @param image          the misclassified test image
+     * @param predictedLabel the label returned by {@link Query#findBestMatch}
+     * @param diagnostic     detailed distance information from {@link Query#diagnoseMatch}
+     */
     private void logMismatch(Image image, String predictedLabel, Query.MatchDiagnostic diagnostic) {
         System.out.printf(
                 Locale.US,
@@ -163,6 +187,14 @@ public class Evaluator {
     }
 
 
+    /**
+     * Initialises the PCA model, database, and query engine using at most
+     * {@code MAX_INDIVIDUALS_FOR_TRAINING} individuals from the training directory.
+     * Validates that the model is correctly built before storing it.
+     *
+     * @throws IOException              if the training directory cannot be read
+     * @throws AssertionError           if PCA invariants (image count, projection shape) are violated
+     */
     private void setANewPca() throws IOException {
 
         PCA pca = new PCA(resolveExistingDirectory(TRAINING_DIR), MAX_INDIVIDUALS_FOR_TRAINING, false);
@@ -219,6 +251,14 @@ public class Evaluator {
         this.query = new Query(DEFAULT_THRESHOLD);
     }
 
+    /**
+     * Projects an image into the PCA eigenspace and returns the best matching label.
+     *
+     * @param image image to classify
+     * @return the label of the closest accepted person, or {@code ""} if no match is found
+     * @throws IOException              if the image pixels cannot be read
+     * @throws IllegalStateException    if the PCA model has not been initialised yet
+     */
     private String predict(Image image) throws IOException {
         if (pca == null || dataBase == null) {
             throw new IllegalStateException("PCA and database must be initialized before prediction");
@@ -228,6 +268,15 @@ public class Evaluator {
         return query.findBestMatch(projectedImage, dataBase);
     }
 
+    /**
+     * Loads all images from {@code sourceDir}, stopping after {@code maxIndividualsToLoad}
+     * distinct individuals have been processed (0 means no limit).
+     *
+     * @param sourceDir            root directory containing one sub-folder per person
+     * @param maxIndividualsToLoad maximum number of distinct individuals to load (0 = unlimited)
+     * @return list of loaded {@link Image} objects
+     * @throws IOException if the directory does not exist or no images are found
+     */
     private List<Image> loadImages(String sourceDir, int maxIndividualsToLoad) throws IOException {
         File root = new File(resolveExistingDirectory(sourceDir));
         File[] personneFolders = root.listFiles(File::isDirectory);

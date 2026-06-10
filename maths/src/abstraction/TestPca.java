@@ -12,6 +12,16 @@ import java.util.Map;
 import math.Matrix;
 import math.Vector;
 
+/**
+ * Integration and unit tests for the {@link PCA} class.
+ *
+ * <p>Tests verify that PCA loads images correctly from the training directory,
+ * that the projection matrix has the expected dimensions, and that projecting
+ * individual images with {@link PCA#projectVector} gives the same result as the
+ * batch projections stored in the model. A change-of-basis test is also included.</p>
+ *
+ * @see PCA
+ */
 public class TestPca {
 
     private static final String TRAINING_DIR = "../data_filtred/train";
