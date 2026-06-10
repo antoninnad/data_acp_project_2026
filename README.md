@@ -203,8 +203,7 @@ La compilation se lance, avec quelques warning dus à l'utilisation d'objets dé
     ```
 Cette command vous permet de compiler le programme en utilisant un autre point d'entrée qui va permettre d'afficher un certain nombre de mesures et de résultats réalisés avec les bases `test` et `train`.
 
-3.
-Vous pouvez également générer la documentation associée (Javadoc) via la commande suivante :
+3. Vous pouvez également générer la documentation associée (Javadoc) via la commande suivante :
 ```bash
 ant doc
 ```
