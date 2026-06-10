@@ -203,15 +203,14 @@ public class TestPca {
 
     
     /**
-     * Pour chaque image attendue, recalcule sa projection via {@link PCA#projectVector}
-     * et la compare colonne par colonne à la projection stockée dans {@code projectedFaces},
-     * avec une tolérance numérique de {@code 1e-6}.
+     * For each expected image, recalculate its projection via {@link PCA#projectVector}
+     * and compares it column by column to the projection stored in {@code projectedFaces},
+     * with a digital tolerance of {@code 1e-6}.
      *
      * @param expectedImages  list of the reference images
      * @param pca             PCA model already trained
      * @param projectedFaces  matrix of stored projections
      * @throws IOException    if reading an image failed
-     * @throws AssertionError if a recalculated projection is different from the stored one
      */
     private static void assertStoredProjectionMatchesProjectionMethod(
             List<Image> expectedImages,
@@ -225,6 +224,10 @@ public class TestPca {
         }
     }
 
+    
+    /**
+     * Test a simple change of basis on a known vector
+     */
     private static void testChangingBaseImage() {
         Vector data = new Vector(new double[] {
                 2, 5, -1, 7, 4, 3
@@ -250,6 +253,13 @@ public class TestPca {
         System.out.println("testChangingBaseImage reussi");
     }
 
+    /**
+     * Check the exact equality (component by component) between 2 vectors
+     *
+     * @param expected vector of reference
+     * @param result   the vector obtained
+     * @throws AssertionError if the dimensions differ or if a component is not equal
+     */
     private static void assertVectorEquals(Vector expected, Vector result) {
         if (result.getDimension() != expected.getDimension()) {
             throw new AssertionError(
@@ -274,6 +284,15 @@ public class TestPca {
         }
     }
 
+    /**
+     * Check the approximate equality (component by component) between 2 vectors
+     * by allowing a maximum absolute deviation of {@code tolerance}.
+     *
+     * @param expected  vector of reference
+     * @param result    vector obtained
+     * @param tolerance the maximum absolute deviation allowed per component
+     * @throws AssertionError if the dimensions differ or if a component exceeds the tolerance
+     */
     private static void assertVectorAlmostEquals(Vector expected, Vector result, double tolerance) {
         if (result.getDimension() != expected.getDimension()) {
             throw new AssertionError(
