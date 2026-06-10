@@ -103,7 +103,10 @@ public class Vector {
 	public Vector difference(Vector v) {
 		
 		if (this.data.length != v.data.length) {
-			//throw();
+			throw new IllegalArgumentException(
+			        "Vector dimensions must match for subtraction. Expected "
+			        + this.dimension + ", but got " + v.getDimension() + "."
+			    );
 		}
 		
 		Vector diffVector = new Vector(this.data.length);

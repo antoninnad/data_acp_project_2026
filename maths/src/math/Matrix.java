@@ -235,7 +235,8 @@ public class Matrix {
 	 * Calculate the covariate matrix
 	 * @param Matrix containing centered images (dimension = nxp where n>p)
 	 * @return covariate matrix (dimension = pxp)
-	 * */
+	 * 
+	 */
 	public Matrix covariateMatrix() throws DimensionMismatchException {
 		// Computes the transposed matrix
 		Matrix transposedMatrix = this.transpose();
