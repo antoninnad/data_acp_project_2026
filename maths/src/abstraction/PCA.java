@@ -765,6 +765,11 @@ public class PCA {
 		return eigenfaces;
 	}
 
+	public Matrix getKeptEigenfaces() {
+		int first = getSkippedLeadingAxes();
+		return eigenfaces.getSubColumns(first, numberOfKeptAxes - 1);
+	}
+
 	public Vector getPixelMeans() {
 		return pixelMeans;
 	}

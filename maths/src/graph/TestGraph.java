@@ -18,8 +18,9 @@ public class TestGraph extends Application {
 		
 
 		
-		QuadraticErrorGraph errorGraph = new QuadraticErrorGraph();
-		LineChart<String, Number> monGraphique2 = errorGraph.generateQuadraticErrorGraph();
+		// QuadraticErrorGraph nécessite une instance PCA — utiliser new QuadraticErrorGraph(pca)
+		// QuadraticErrorGraph errorGraph = new QuadraticErrorGraph();
+		// LineChart<String, Number> monGraphique2 = errorGraph.generateQuadraticErrorGraph();
 		
 		
 		
