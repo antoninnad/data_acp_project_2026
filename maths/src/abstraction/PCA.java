@@ -102,6 +102,10 @@ public class PCA {
 			reportProgress("chargement des donnees ACP depuis " + filename);
 			loadFromFile();
 
+			// Computing the covariance matrix
+			reportProgress("calcul de la matrice de covariance");
+			cov = facesCoordinates.covariateMatrixWithProgress(128);
+
 		} catch (IOException file_error) {
 
 			/*--- If the save file cannot be read, we compute the PCA data (the new images basis) ---*/
