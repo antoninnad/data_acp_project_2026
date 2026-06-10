@@ -322,11 +322,24 @@ public class Evaluator {
         return images;
     }
 
+    /**
+	 * Converts a folder's name into a number so the folders can be sorted numerically
+	 * If the folder name doesn't contain a valid label, it gets pushed to the end of the list
+	 * @param folder The folder representing a person in the database
+	 * @return The folder's label converted to an integer
+	 */
     private int personFolderSortValue(File folder) {
         String label = Image.labelFromFolderName(folder.getName());
         return label.isEmpty() ? Integer.MAX_VALUE : Integer.parseInt(label);
     }
 
+    /**
+	 * Looks for a folder to make sure it exists. It checks the current folder first,
+	 * and if it is not there, it checks the parent folder
+	 * @param path The relative folder path we want to find
+	 * @return The correct, working folder path
+	 * @throws IOException If the folder cannot be found in either location
+	 */
     private String resolveExistingDirectory(String path) throws IOException {
         File fromCurrentDirectory = new File(path);
         if (fromCurrentDirectory.isDirectory()) {

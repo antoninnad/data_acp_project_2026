@@ -36,6 +36,9 @@ public class QueryTest {
         System.out.println("\nTous les tests sont passés !");
     }
 
+    /**
+     * Tests that the default constructor sets the similarity threshold to 1.2
+     */
     private static void testDefaultConstructor() {
         Query query = new Query();
 
@@ -46,6 +49,9 @@ public class QueryTest {
         System.out.println("testDefaultConstructor réussi");
     }
 
+    /**
+     * Tests that the constructor correctly saves a custom similarity threshold value
+     */
     private static void testConstructorWithThreshold() {
         Query query = new Query(0.5);
 
@@ -56,6 +62,9 @@ public class QueryTest {
         System.out.println("testConstructorWithThreshold réussi");
     }
 
+    /**
+     * Tests that the squared norm works correctly when two vectors have the same size
+     */
     private static void testSquaredNormeWithSameDimension() {
         Vector a = new Vector(new double[]{1.0, 2.0, 3.0});
         Vector b = new Vector(new double[]{4.0, 6.0, 3.0});
@@ -69,6 +78,9 @@ public class QueryTest {
         System.out.println("testSquaredNormeWithSameDimension réussi");
     }
 
+    /**
+     * Tests that the distance calculation returns 0.0 when comparing two identical vectors
+     */
     private static void testSquaredNormeWithIdenticalVectors() {
         Vector a = new Vector(new double[]{1.0, 2.0, 3.0});
         Vector b = new Vector(new double[]{1.0, 2.0, 3.0});
@@ -82,6 +94,9 @@ public class QueryTest {
         System.out.println("testSquaredNormeWithIdenticalVectors réussi");
     }
 
+    /**
+     * Tests that trying to compare two vectors of different sizes correctly throws a DimensionVectorException.
+     */
     private static void testSquaredNormeWithDifferentDimensions() {
         Vector a = new Vector(new double[]{1.0, 2.0});
         Vector b = new Vector(new double[]{1.0, 2.0, 3.0});
@@ -101,6 +116,9 @@ public class QueryTest {
         System.out.println("testSquaredNormeWithDifferentDimensions réussi");
     }
 
+    /**
+     * Tests that findBestMatch finds the person with the closest matching vector in the database
+     */
     private static void testFindBestMatchReturnsCorrectLabel() {
         Query query = new Query(2.0);
 
@@ -123,6 +141,10 @@ public class QueryTest {
         System.out.println("testFindBestMatchReturnsCorrectLabel réussi");
     }
 
+    /**
+     * Tests that findBestMatch returns an empty string if all images in the database 
+     * are too different from the target image (above the similarity threshold)
+     */
     private static void testFindBestMatchReturnsEmptyStringWhenNoMatch() {
         Query query = new Query(1.0);
 
@@ -145,6 +167,9 @@ public class QueryTest {
         System.out.println("testFindBestMatchReturnsEmptyStringWhenNoMatch réussi");
     }
 
+    /**
+     * Tests that findBestMatch safely returns an empty string if the database contains no images at all
+     */
     private static void testFindBestMatchWithEmptyDataBase() {
         Query query = new Query(1.0);
 
@@ -160,6 +185,10 @@ public class QueryTest {
         System.out.println("testFindBestMatchWithEmptyDataBase réussi");
     }
 
+    /**
+     * Tests that if multiple items match equally well, findBestMatch picks 
+     * the first one it finds in the database
+     */
     private static void testFindBestMatchReturnsFirstMatchingLabel() {
         Query query = new Query(10.0);
 
