@@ -3,6 +3,11 @@ package app;
 import abstraction.Image;
 import abstraction.PCA;
 import abstraction.Query;
+import graph.VarianceGraph;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import math.Matrix;
 import math.Vector;
 
@@ -11,6 +16,7 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -64,6 +70,8 @@ public class IHM extends Application {
     private Button applyAxesButton;
     private ImageView averageFaceView;
     private FlowPane eigenfacesPane;
+    private Tab cumulativeEigenvaluesTab;
+    private Tab quadraticErrorTab;
 
     private File selectedFile;
 
@@ -249,7 +257,23 @@ public class IHM extends Application {
         eigenScroll.setFitToWidth(true);
         eigenTab.setContent(eigenScroll);
 
-        tabs.getTabs().addAll(avgTab, eigenTab);
+        cumulativeEigenvaluesTab = new Tab("Cumulative Eigenvalues");
+        cumulativeEigenvaluesTab.setClosable(false);
+        Label placeholder = new Label("Chargement de la base...");
+        placeholder.setStyle("-fx-text-fill: #aaaaaa; -fx-font-style: italic;");
+        StackPane phPane = new StackPane(placeholder);
+        phPane.setStyle("-fx-background-color: #f7f7f7;");
+        cumulativeEigenvaluesTab.setContent(phPane);
+
+        quadraticErrorTab = new Tab("Quadratic Error");
+        quadraticErrorTab.setClosable(false);
+        Label qePlaceholder = new Label("Chargement de la base...");
+        qePlaceholder.setStyle("-fx-text-fill: #aaaaaa; -fx-font-style: italic;");
+        StackPane qePane = new StackPane(qePlaceholder);
+        qePane.setStyle("-fx-background-color: #f7f7f7;");
+        quadraticErrorTab.setContent(qePane);
+
+        tabs.getTabs().addAll(avgTab, eigenTab, cumulativeEigenvaluesTab, quadraticErrorTab);
         return tabs;
     }
 
@@ -319,7 +343,79 @@ public class IHM extends Application {
         axesField.setText(String.valueOf(pca.getNumberOfKeptAxes()));
         updateStats();
         loadVisuals();
+        loadVarianceGraph();
+        loadQuadraticErrorGraph();
         setStatus("Base chargée — " + pca.getNumberOfKeptAxes() + " axes retenus", false);
+    }
+
+    private void loadQuadraticErrorGraph() {
+        Thread t = new Thread(() -> {
+            try {
+                int nAxes = pca.getNumberOfKeptAxes();
+                Matrix eigenFacesMatrix = pca.getKeptEigenfaces();
+                Matrix projected = pca.getProjectedFacesOnKeptAxes();
+                Matrix original = pca.getFacesCoordinates();
+                int nbImages = original.getNbColumns();
+
+                String[] names = new String[nAxes];
+                double[] errors = new double[nAxes];
+                for (int i = 1; i <= nAxes; i++) {
+                    names[i - 1] = "axe" + i;
+                    Matrix eigen_i = eigenFacesMatrix.subMatrixFirstColumns(i - 1);
+                    Matrix proj_i  = projected.getSubRows(0, i - 1);
+                    Matrix recon   = eigen_i.multiply(proj_i);
+                    double total   = 0.0;
+                    for (int j = 0; j < nbImages; j++) {
+                        Vector diff = original.getColumn(j).difference(recon.getColumn(j));
+                        total += diff.norm();
+                    }
+                    errors[i - 1] = total / nbImages;
+                }
+
+                Platform.runLater(() -> {
+                    CategoryAxis xAxis = new CategoryAxis();
+                    xAxis.setLabel("Axes");
+                    NumberAxis yAxis = new NumberAxis();
+                    yAxis.setLabel("Quadratic Error E(J)");
+                    LineChart<String, Number> chart = new LineChart<>(xAxis, yAxis);
+                    chart.setTitle("Evolution of the quadratic error depending on axes");
+                    chart.setCreateSymbols(false);
+                    XYChart.Series<String, Number> series = new XYChart.Series<>();
+                    series.setName("Error");
+                    for (int i = 0; i < names.length; i++) {
+                        series.getData().add(new XYChart.Data<>(names[i], errors[i]));
+                    }
+                    xAxis.getCategories().addAll(Arrays.asList(names));
+                    chart.getData().add(series);
+                    ScrollPane scroll = new ScrollPane(chart);
+                    scroll.setFitToWidth(true);
+                    scroll.setFitToHeight(true);
+                    quadraticErrorTab.setContent(scroll);
+                });
+            } catch (Exception ex) {
+                System.err.println("[IHM] quadratic error graph : " + ex.getMessage());
+                ex.printStackTrace();
+                Platform.runLater(() -> {
+                    Label err = new Label("Erreur : " + ex.getMessage());
+                    err.setStyle("-fx-text-fill: #cc3333;");
+                    quadraticErrorTab.setContent(new StackPane(err));
+                });
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void loadVarianceGraph() {
+        try {
+            VarianceGraph vg = new VarianceGraph(pca);
+            ScrollPane scroll = new ScrollPane(vg.generateVarianceGraph());
+            scroll.setFitToWidth(true);
+            scroll.setFitToHeight(true);
+            cumulativeEigenvaluesTab.setContent(scroll);
+        } catch (Exception ex) {
+            System.err.println("[IHM] variance graph : " + ex.getMessage());
+        }
     }
 
     // ── Statistiques ──────────────────────────────────────────────────────────
@@ -368,6 +464,7 @@ public class IHM extends Application {
                     Image.centeredVectorToImage(face, tmp.getAbsolutePath());
                 }
                 averageFaceView.setImage(new javafx.scene.image.Image(tmp.toURI().toString()));
+                averageFaceView.setRotate(90);
             }
         } catch (Exception ex) {
             System.err.println("[IHM] visage moyen : " + ex.getMessage());
@@ -389,6 +486,7 @@ public class IHM extends Application {
                         iv.setFitWidth(64);
                         iv.setFitHeight(64);
                         iv.setPreserveRatio(true);
+                        iv.setRotate(90);
 
                         Label lbl = new Label("EF " + (i + 1));
                         lbl.setStyle("-fx-font-size: 10px; -fx-text-fill: #555555;");
@@ -419,6 +517,7 @@ public class IHM extends Application {
         if (file != null) {
             selectedFile = file;
             queryImageView.setImage(new javafx.scene.image.Image(file.toURI().toString()));
+            queryImageView.setRotate(90);
             resultNameLabel.setText("—");
             resultNameLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold;");
             resultImageView.setImage(null);
@@ -450,6 +549,7 @@ public class IHM extends Application {
                             resultImageView.setImage(
                                     new javafx.scene.image.Image(new File(imgPath).toURI().toString())
                             );
+                            resultImageView.setRotate(90);
                         }
                     }
                     searchButton.setDisable(false);
