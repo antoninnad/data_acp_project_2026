@@ -1,6 +1,7 @@
 package abstraction;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +28,14 @@ public class TestPca {
     private static final String TRAINING_DIR = "../data_filtred/train";
     private static final int MAX_INDIVIDUALS_FOR_TEST = 14;
 
+    
+    /**
+     * Launch all tests for the PCA and print a message if it's successful
+     * 
+     *@param args unused
+     *@throws IOException if there is a reading error
+     * 
+     * */    
     public static void main(String[] args) throws IOException {
 
         testPcaStartsFromTrainingDirectory();
@@ -35,7 +44,14 @@ public class TestPca {
     }
 
 
-
+    /**
+     * Check the proper execution of a PCA model from training directory : loading of images, calculation of the mean face,
+     * dimension of the projection matrix, label consistency and the concordance between stored and recalculated projections
+     * via {@link PCA#projectVector}.
+     *
+     * @throws IOException if the training directory is inaccessible
+     * @throws AssertionError if one of the verifications failed
+     */
 
     private static void testPcaStartsFromTrainingDirectory() throws IOException {
         PCA pca = new PCA(TRAINING_DIR, MAX_INDIVIDUALS_FOR_TEST, false);
@@ -89,6 +105,18 @@ public class TestPca {
         );
     }
 
+    
+    /**
+     * Load all the images (`.jpg` or `.png`) from {@code sourceDir},
+     * by traversing a maximum of {@code maxIndividualsToLoad} subfolders
+     * (one subfolder = one individual). Forlders and files are sorted alphabetically to ensure 
+     * deterministic order.
+     *
+     * @param sourceDir  path to the root directory containing the subfolders per individuals
+     * @param maxIndividualsToLoad  maximum number of individuals to load (0=unlimited)
+     * @return list of loaded images
+     * @throws IOException if {sourceDir} is not found or inaccessible
+     */
     private static List<Image> loadImages(String sourceDir, int maxIndividualsToLoad) throws IOException {
         File root = new File(sourceDir);
         File[] personneFolders = root.listFiles(File::isDirectory);
@@ -130,6 +158,15 @@ public class TestPca {
         return images;
     }
 
+    /**
+     * Check that labels and the number of vectors in {@code mapSign}
+     * corresponod exactly to the expected images : each label must contain as many
+     * vectors as associated images and the total must equal to {@code expectedImages.size()}.
+     *
+     * @param expectedImages reference list of loaded images
+     * @param mapSign       list of projected vector from the PCA model
+     * @throws AssertionError if a label is incorrectly counted or if the total differs
+     */
     private static void assertMapLabelsMatchImages(List<Image> expectedImages, Map<String, List<Vector>> mapSign) {
         Map<String, Integer> expectedCountsByLabel = new LinkedHashMap<>();
         int projectedVectorCount = 0;
@@ -164,6 +201,18 @@ public class TestPca {
         }
     }
 
+    
+    /**
+     * Pour chaque image attendue, recalcule sa projection via {@link PCA#projectVector}
+     * et la compare colonne par colonne à la projection stockée dans {@code projectedFaces},
+     * avec une tolérance numérique de {@code 1e-6}.
+     *
+     * @param expectedImages  list of the reference images
+     * @param pca             PCA model already trained
+     * @param projectedFaces  matrix of stored projections
+     * @throws IOException    if reading an image failed
+     * @throws AssertionError if a recalculated projection is different from the stored one
+     */
     private static void assertStoredProjectionMatchesProjectionMethod(
             List<Image> expectedImages,
             PCA pca,
