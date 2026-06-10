@@ -192,8 +192,6 @@ public class IHM extends Application {
         return grid;
     }
 
-    // ── Zone saisie image ──────────────────────────────────────────────────────
-
     /**
      * Builds the top-left zone with the query image display, browse button, and search button.
      *
@@ -237,7 +235,6 @@ public class IHM extends Application {
         return box;
     }
 
-    // ── Zone résultat ──────────────────────────────────────────────────────────
 
     /**
      * Builds the bottom-left zone that displays the matched person's name and a sample image.
@@ -274,7 +271,6 @@ public class IHM extends Application {
         return box;
     }
 
-    // ── Onglets visualisations ─────────────────────────────────────────────────
 
     /**
      * Builds the top-right tab pane with four tabs: average face, eigenfaces,
@@ -364,7 +360,6 @@ public class IHM extends Application {
         return box;
     }
 
-    // ── Initialisation PCA ─────────────────────────────────────────────────────
 
     /**
      * Launches PCA initialisation on a daemon background thread.
@@ -429,6 +424,13 @@ public class IHM extends Application {
                 Matrix original = pca.getFacesCoordinates();
                 int nbImages = original.getNbColumns();
 
+                double baselineError = 0.0;
+                for (int j = 0; j < nbImages; j++) {
+                    double n = original.getColumn(j).norm();
+                    baselineError += n * n;
+                }
+                baselineError /= nbImages;
+
                 String[] names = new String[nAxes];
                 double[] errors = new double[nAxes];
                 for (int i = 1; i <= nAxes; i++) {
@@ -439,21 +441,22 @@ public class IHM extends Application {
                     double total   = 0.0;
                     for (int j = 0; j < nbImages; j++) {
                         Vector diff = original.getColumn(j).difference(recon.getColumn(j));
-                        total += diff.norm();
+                        double n = diff.norm();
+                        total += n * n;
                     }
-                    errors[i - 1] = total / nbImages;
+                    errors[i - 1] = baselineError > 0 ? (total / nbImages) / baselineError * 100.0 : 0.0;
                 }
 
                 Platform.runLater(() -> {
                     CategoryAxis xAxis = new CategoryAxis();
                     xAxis.setLabel("Axes");
                     NumberAxis yAxis = new NumberAxis();
-                    yAxis.setLabel("Quadratic Error E(J)");
+                    yAxis.setLabel("Erreur résiduelle (%)");
                     LineChart<String, Number> chart = new LineChart<>(xAxis, yAxis);
                     chart.setTitle("Evolution of the quadratic error depending on axes");
                     chart.setCreateSymbols(false);
                     XYChart.Series<String, Number> series = new XYChart.Series<>();
-                    series.setName("Error");
+                    series.setName("E(J) / E(0) [%]");
                     for (int i = 0; i < names.length; i++) {
                         series.getData().add(new XYChart.Data<>(names[i], errors[i]));
                     }
@@ -494,7 +497,6 @@ public class IHM extends Application {
         }
     }
 
-    // ── Statistiques ──────────────────────────────────────────────────────────
 
     /**
      * Refreshes the statistics labels in the parameter zone with the current
@@ -526,7 +528,6 @@ public class IHM extends Application {
         }
     }
 
-    // ── Visualisations ────────────────────────────────────────────────────────
 
     /**
      * Loads and displays the average face and the first 20 eigenfaces in their
@@ -589,7 +590,6 @@ public class IHM extends Application {
         }
     }
 
-    // ── Recherche ─────────────────────────────────────────────────────────────
 
     /**
      * Opens a file chooser dialog, loads the selected image into the query image view,
@@ -705,7 +705,6 @@ public class IHM extends Application {
         return result;
     }
 
-    // ── Paramètres ────────────────────────────────────────────────────────────
 
     /**
      * Reads the axes text field, validates the value, updates the PCA model, and
@@ -730,7 +729,6 @@ public class IHM extends Application {
         }
     }
 
-    // ── Utilitaires ───────────────────────────────────────────────────────────
 
     /**
      * Displays a modal error dialog with the given message.
