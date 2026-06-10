@@ -48,22 +48,42 @@ public class PCA {
 
 
 	/**
-	 * Initialises all the PCA attributes, doing all the necessary work to change the images' basis.
-	 * It also saves the computed data to a file.
-	 * @throws IOException
+	 * Default constructor. Starts the PCA using the default folder path.
+	 * It loads saved data if it exists, or calculates everything from scratch.
+	 * @throws IOException If the files or folders cannot be read.
 	 */
 	public PCA() throws IOException {
 		this(resolveExistingDirectory(defaultSourceDir));
 	}
 
+	/**
+	 * Constructor that sets up the PCA using a  folder path.
+	 * @param sourceDir The path to the folder containing the images.
+	 * @throws IOException If the folder cannot be accessed.
+	 */
 	public PCA(String sourceDir) throws IOException {
 		this(sourceDir, 0, true);
 	}
 
+	/**
+	 * Constructor that lets you limit how many people/folders to load from the database
+	 * @param sourceDir The path to the folder containing the images
+	 * @param maxIndividualsToLoad The maximum number of people to load (use 0 for all)
+	 * @throws IOException If reading files goes wrong
+	 */
 	public PCA(String sourceDir, int maxIndividualsToLoad) throws IOException {
 		this(sourceDir, maxIndividualsToLoad, true);
 	}
 
+	/**
+	 * The main constructor that runs the entire PCA process
+	 * It reads the images, standardizes the pixels, finds the best mathematical 
+	 * features (eigenfaces), and projects the images into the new coordinate system
+	 * @param sourceDir The path to the folder containing the images
+	 * @param maxIndividualsToLoad The maximum number of people to load (use 0 for all)
+	 * @param writeDebugImages Set to true to save visual helper images (like the mean face) to disk
+	 * @throws IOException If reading folders or writing debug files fails
+	 */
 	public PCA(String sourceDir, int maxIndividualsToLoad, boolean writeDebugImages) throws IOException {
 		this.sourceDir = sourceDir;
 		this.maxIndividualsToLoad = maxIndividualsToLoad;
@@ -162,16 +182,31 @@ public class PCA {
 		}
 	}
 
+	/**
+	 * Prints a status check to the console
+	 * @param message Description text summarizing the currently executed state
+	 */
 	private void reportProgress(String message) {
 		System.out.println("[ACP] " + message);
 	}
 
+	/**
+	 * Prints a step-by-step counter to the console (e.g., "images loaded : 100/500")
+	 * @param label The name of what we are tracking
+	 * @param done The current progress number
+	 * @param total The target end number
+	 */
 	private void reportItemProgress(String label, int done, int total) {
 		if (done == total || done % 100 == 0) {
 			System.out.println("[ACP] " + label + " : " + done + "/" + total);
 		}
 	}
 
+	/**
+	 * Finds the most important mathematical directions (eigenvectors) from the 
+	 * covariance matrix. It loops repeatedly until it captures enough image information
+	 * @return An EigenSelection object holding the important features
+	 */
 	private EigenSelection computeDominantEigenvectors() {
 		int dimension = cov.getNbColumns();
 		int maxAxes = Math.min(100, dimension);
@@ -252,6 +287,12 @@ public class PCA {
 		return new EigenSelection(eigenvectors.subMatrixFirstColumns(Math.max(0, keptAxes - 1)));
 	}
 
+	/**
+	 * Creates a starting vector filled with random numbers
+	 * @param dimension How long the vector needs to be (number of elements)
+	 * @param random The random number generator to use
+	 * @return An array of doubles representing the random unit vector
+	 */
 	private double[] randomUnitVector(int dimension, Random random) {
 		double[] vector = new double[dimension];
 
@@ -263,6 +304,13 @@ public class PCA {
 		return vector;
 	}
 
+	/**
+	 * Cleans up a vector by removing components that overlap with features 
+	 * we already calculated. This keeps all features separate and unique.
+	 * @param vector      The vector we want to clean up.
+	 * @param keptVectors The list of unique vectors we already saved.
+	 * @param keptAxes    How many vectors are currently in the saved list.
+	 */
 	private void orthogonalize(double[] vector, double[][] keptVectors, int keptAxes) {
 		for (int axis = 0; axis < keptAxes; axis++) {
 			double projection = dot(vector, keptVectors[axis]);
@@ -273,6 +321,10 @@ public class PCA {
 		}
 	}
 
+	/**
+	 * its mathematical length equals exactly 1.0
+	 * @param vector The vector array to rescale in place
+	 */
 	private void normalise(double[] vector) {
 		double norm = norm(vector);
 
@@ -281,12 +333,21 @@ public class PCA {
 		}
 	}
 
+	/**
+	 * Multiplies every single number inside a vector by a specific scaling multiplier
+	 * @param vector The vector array to modify
+	 * @param scale The number to multiply by
+	 */
 	private void scale(double[] vector, double scale) {
 		for (int i = 0; i < vector.length; i++) {
 			vector[i] *= scale;
 		}
 	}
 
+	/**
+	 * Calculates the average values and variations for every pixel across all training images
+	 * This math is needed to standardize the data before comparing images
+	 */
 	private void standardizeTrainingPixels() {
 		int rows = facesCoordinates.getNbRows();
 		int columns = facesCoordinates.getNbColumns();
@@ -323,6 +384,12 @@ public class PCA {
 		}
 	}
 
+	/**
+	 * Standardizes an incoming image vector using the average stats calculated from the training data
+	 * @param pixels The raw image pixels vector to adjust
+	 * @return A new normalized vector where pixel values are balanced
+	 * @throws RuntimeException If the training statistics averages are missing
+	 */
 	private Vector standardizeWithTrainingPixels(Vector pixels) {
 		if (pixelMeans == null || pixelStandardDeviations == null) {
 			throw new RuntimeException("Pixel standardization statistics are not initialized");
@@ -340,10 +407,21 @@ public class PCA {
 		return new Vector(standardizedData);
 	}
 
+	/**
+	 * Calculates the norm of a vector
+	 * @param vector The vector to measure
+	 * @return The calculated length as a double
+	 */
 	private double norm(double[] vector) {
 		return Math.sqrt(dot(vector, vector));
 	}
 
+	/**
+	 * Calculates the dot product of two vectors 
+	 * @param first  The first vector array
+	 * @param second The second vector array
+	 * @return The final combined scalar sum
+	 */
 	private double dot(double[] first, double[] second) {
 		double result = 0.0;
 
@@ -354,6 +432,10 @@ public class PCA {
 		return result;
 	}
 
+	/**
+	 * A simple private helper class used to temporarily group and return 
+	 * a matrix of calculated features.
+	 */
 	private static class EigenSelection {
 		private final Matrix eigenvectors;
 
@@ -412,8 +494,8 @@ public class PCA {
 
 
 	/**
-	 * to get the map with key it's the label of the personne and the values are the projection of the person with the matrix
-	 * @return
+	 * To get the map with key it's the label of the personn and the values are the projection of the person with the matrix
+	 * @return A linked mapping matching people labels to lists of their projected face vectors.
 	 */
 	public Map<String, List<Vector>> getMapSign() {
 
@@ -426,7 +508,7 @@ public class PCA {
 		}
 
 
-		return  resultat;
+		return resultat;
 
 	}
 
@@ -434,7 +516,7 @@ public class PCA {
 	/**
 	 * Getter for the eigenvalues attribute
 	 * @return Returns a vector containing the eigenvalues ordered in
-	 * ascending order
+	 * descending order
 	 */
 	public Vector getEigenValues() {
 		return this.cov.getEigenvalues();
@@ -482,10 +564,10 @@ public class PCA {
 	}
 
 	/**
-	 * to get The eigneis values sorted
+	 * to get The eigneis values sorted to match descending eigenvalues sorting.
 	 * @param eigenvectors
 	 * @param eigenvalues
-	 * @return
+	 * @return  A new sorted matrix containing principal components arranged by variance weight.
 	 */
 
 	private Matrix getSortedEigenvectors(Matrix eigenvectors, Vector eigenvalues) {
@@ -499,10 +581,11 @@ public class PCA {
 		return sortedEigenvectors;
 	}
 
+	
 	/**
-	 * to sort the eigeinvalues
+	 * to sort the eigeinvalues from largest eigenvalue to smallest.
 	 * @param eigenvalues
-	 * @return
+	 * @return An array of original indexes sorted by their values in descending order.
 	 */
 
 	private Integer[] getEigenvalueIndexesByDescendingValue(Vector eigenvalues) {
@@ -581,8 +664,7 @@ public class PCA {
 	/**
 	 * Centres images with the mean face
 	 *
-	 * @param list of images (resized and greyscale)
-	 * @return matrix of centred images
+	 *@throws IOException If file operations inside centering pipeline fail.
 	 * */
 	public void centreImages() throws IOException {
 
@@ -598,11 +680,11 @@ public class PCA {
 		}
 	}
 
-
+	
 	/**
 	 * Centres a given vector with the mean face
 	 * @param v The vector to center
-	 * @result The meanFace vector has been substracted from v
+	 * @return The meanFace vector has been substracted from v
 	 * */
 	public Vector centredVector(Vector v) {
 
@@ -629,8 +711,8 @@ public class PCA {
 
 
 	/** Calculate the mean face based on a list of Images, by averaging pixels by pixels
-	 * @result meanFace is now initialised and represents the mean face
-	 * */
+	 * 
+	 */
 	public void computeMeanFace() {
 		if (facesCoordinates == null) {
 			throw new RuntimeException("Faces coordinates matrix is null");
@@ -701,7 +783,8 @@ public class PCA {
 	}
 
 	/**
-	 * Loads the informations regarding the PCA to avoid recalculating too often
+	 * Loads the PCA configuration and calculated data from a file.
+	 * @throws IOException if an error occurs while reading the file
 	 */
 	public void loadFromFile() throws IOException {
 		Scanner scanner = new Scanner(new BufferedReader(new FileReader(filename)));
@@ -747,6 +830,12 @@ public class PCA {
 
 	}
 
+	/**
+	 * Resolves a directory path by checking its existence relative to the current or parent directory
+	 * @param path the relative path to resolve
+	 * @return the valid existing directory path
+	 * @throws IOException if the directory cannot be found in either location
+	 */
 	private static String resolveExistingDirectory(String path) throws IOException {
 		File fromCurrentDirectory = new File(path);
 		if (fromCurrentDirectory.isDirectory()) {
@@ -761,19 +850,35 @@ public class PCA {
 		throw new IOException("cannot access '" + path + "': No such file or directory");
 	}
 
+	/**
+	 * Gets the complete raw matrix containing all calculated eigenfaces
+	 * @return the full eigenfaces matrix
+	 */
 	public Matrix getEigenfaces() {
 		return eigenfaces;
 	}
 
+	/**
+	 * Extracts the subset of eigenfaces corresponding to the kept principal components
+	 * @return the matrix of active/retained eigenfaces
+	 */
 	public Matrix getKeptEigenfaces() {
 		int first = getSkippedLeadingAxes();
 		return eigenfaces.getSubColumns(first, numberOfKeptAxes - 1);
 	}
 
+	/**
+	 * Gets the average pixel values vector calculated across the training set.
+	 * @return the mean pixel values vector
+	 */
 	public Vector getPixelMeans() {
 		return pixelMeans;
 	}
 
+	/**
+	 * Generates a mapping between unique image labels and their respective file paths.
+	 * @return a map linking each unique image label to its image path
+	 */
 	public Map<String, String> getLabelToImagePath() {
 		Map<String, String> result = new LinkedHashMap<>();
 		for (Image img : images) {
@@ -782,6 +887,10 @@ public class PCA {
 		return result;
 	}
 
+	/**
+	 * Sets the number of PCA axes to retain
+	 * @param userAxes the desired number of principal components to keep
+	 */
 	public void setNumberOfKeptAxes(int userAxes) {
 		int available = maxNbOfKeptAxes > 0 ? maxNbOfKeptAxes : numberOfKeptAxes;
 		int maxEffective = Math.max(0, available - skippedLeadingAxes);
@@ -790,11 +899,22 @@ public class PCA {
 		this.numberOfKeptAxes = skippedLeadingAxes + clamped;
 	}
 
+	/**
+	 * Calculates the maximum allowable number of components that can be safely kept.
+	 * @return the maximum number of effective principal axes
+	 */
 	public int getMaxNumberOfKeptAxes() {
 		int available = maxNbOfKeptAxes > 0 ? maxNbOfKeptAxes : numberOfKeptAxes;
 		return Math.max(0, available - skippedLeadingAxes);
 	}
 
+	/**
+	 * The main execution entry point for the PCA application. Resolves the target image 
+	 * directory, initializes the Principal Component Analysis, and logs the execution summary
+	 *
+	 * @param args Command-line arguments
+	 * @throws IOException If an error occurs while locating directories or reading files.
+	 */
 	public static void main(String[] args) throws IOException {
 		String sourceDirectory = args.length > 0 ? args[0] : resolveExistingDirectory(defaultSourceDir);
 		PCA pca = new PCA(sourceDirectory);
@@ -808,6 +928,5 @@ public class PCA {
 						+ " axes gardes"
 		);
 	}
-
 
 }
