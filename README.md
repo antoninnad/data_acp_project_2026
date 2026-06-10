@@ -192,16 +192,15 @@ La librairie n'a pas été incluse sur le dépôt GitHub pour éviter le téléc
 
 ## Compilation
 Déplacez-vous dans le répertoire [`data_acp_project_2026/maths`](data_acp_project_2026/maths) puis lancer une des commandes suivantes :
-1.
-```bash
-ant run
-```
+
+1.  ```bash
+    ant run
+    ```
 La compilation se lance, avec quelques warning dus à l'utilisation d'objets dépréciés, et va prendre quelques secondes. L'application se lance dans la foulée.
 
-2.
-```bash
-ant evaluate
-```
+2.  ```bash
+    ant evaluate
+    ```
 Cette command vous permet de compiler le programme en utilisant un autre point d'entrée qui va permettre d'afficher un certain nombre de mesures et de résultats réalisés avec les bases `test` et `train`.
 
 3.
